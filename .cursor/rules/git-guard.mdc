@@ -1,0 +1,11 @@
+---
+description: Safe Git changes by the agent
+globs:
+  - "**/*"
+alwaysApply: true
+---
+
+# Git Guard
+- Не коммить без `git status` и краткого CHANGELOG в `docs/agent_state.md`.
+- Откаты/массовые форматирования только отдельным коммитом с пояснением.
+- Запрещено пушить/ребейзить без явной инструкции пользователя.

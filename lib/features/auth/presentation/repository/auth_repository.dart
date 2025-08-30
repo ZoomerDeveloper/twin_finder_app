@@ -1,0 +1,214 @@
+// lib/features/auth/data/auth_repository.dart
+import 'package:flutter/foundation.dart';
+import 'package:dio/dio.dart';
+import 'package:get_it/get_it.dart';
+import 'package:twin_finder/api/api_client.dart';
+import 'package:twin_finder/api/models/auth_response.dart';
+import 'package:twin_finder/api/models/email_registration_confirm.dart';
+import 'package:twin_finder/api/models/email_registration_request.dart';
+import 'package:twin_finder/api/models/google_login_request.dart';
+import 'package:twin_finder/api/models/apple_login_request.dart';
+import 'package:twin_finder/api/models/login_request.dart';
+import 'package:twin_finder/api/models/logout_request.dart';
+import 'package:twin_finder/api/models/social_login_response.dart';
+import 'package:twin_finder/api/models/user_profile_response.dart';
+import 'package:twin_finder/api/models/user_update.dart';
+import 'package:twin_finder/core/errors/api_error.dart';
+import 'package:twin_finder/core/utils/token_secure.dart';
+
+class AuthRepository {
+  final ApiClient api;
+  final TokenStore tokenStore;
+
+  AuthRepository(GetIt sl)
+    : api = sl<ApiClient>(),
+      tokenStore = sl<TokenStore>();
+
+  // JSON login /api/v1/auth/login → AuthResponse
+  Future<void> login(String email, String password) async {
+    try {
+      final res = await api.authentication.login(
+        body: LoginRequest(email: email, password: password),
+      );
+
+      await tokenStore.save(
+        access: res.data?.accessToken,
+        refresh: res.data?.refreshToken,
+      );
+    } catch (e) {
+      // Convert DioException to ApiError for better error handling
+      throw ApiError.fromDioException(e);
+    }
+  }
+
+  Future<SocialLoginResponse> authGoogle(GoogleLoginRequest request) async {
+    final res = await api.authentication.loginGoogleApiV1AuthLoginGooglePost(
+      body: request,
+    );
+    await tokenStore.save(
+      access: res.data?.accessToken,
+      refresh: res.data?.refreshToken,
+    );
+    return res;
+  }
+
+  Future<SocialLoginResponse> authApple(AppleLoginRequest request) async {
+    final res = await api.authentication.loginAppleApiV1AuthLoginApplePost(
+      body: request,
+    );
+    await tokenStore.save(
+      access: res.data?.accessToken,
+      refresh: res.data?.refreshToken,
+    );
+    return res;
+  }
+
+  Future<AuthResponse> authEmail(String email, String password) async {
+    final res = await api.authentication
+        .initiateRegistrationApiV1AuthRegisterInitiatePost(
+          body: EmailRegistrationRequest(email: email, password: password),
+        );
+
+    return res;
+  }
+
+  Future<AuthResponse> confirmEmail(String email, String code) async {
+    final res = await api.authentication
+        .confirmRegistrationApiV1AuthRegisterConfirmPost(
+          body: EmailRegistrationConfirm(email: email, verificationCode: code),
+        );
+
+    await tokenStore.save(
+      access: res.data?.accessToken,
+      refresh: res.data?.refreshToken,
+    );
+    return res;
+  }
+
+  Future<void> logout() async {
+    final refresh = await tokenStore.refresh;
+    if (refresh != null && refresh.isNotEmpty) {
+      try {
+        await api.authentication.logout(
+          body: LogoutRequest(refreshToken: refresh),
+        );
+      } catch (e) {
+        // Log error but continue with token cleanup
+        debugPrint('Logout API call failed: $e');
+      }
+    }
+    await tokenStore.clear();
+  }
+
+  /// Load user profile with error handling
+  Future<UserProfileResponse> loadMe() async {
+    try {
+      // Check if we have a valid access token before making the request
+      final accessToken = await tokenStore.access;
+      if (accessToken == null || accessToken.isEmpty) {
+        throw Exception('No access token available');
+      }
+
+      return await api.users.getMyProfile();
+    } catch (e) {
+      // Check if it's a server error (500, 502, 503, etc.)
+      if (e is DioException) {
+        final statusCode = e.response?.statusCode;
+        if (statusCode == 401) {
+          // Clear invalid tokens
+          await tokenStore.clear();
+          throw Exception('Authentication required - please login again');
+        } else if (statusCode != null && statusCode >= 500) {
+          throw Exception('Server error: $statusCode - ${e.message}');
+        }
+      }
+      rethrow;
+    }
+  }
+
+  /// Check if user profile is complete
+  Future<bool> isProfileComplete() async {
+    try {
+      final profile = await loadMe();
+      final user = profile.data;
+
+      // Check if all required fields are filled
+      return user.name.isNotEmpty &&
+          user.birthday != null &&
+          user.gender != null &&
+          user.country != null &&
+          user.city != null;
+    } catch (e) {
+      // If we can't load profile, consider it incomplete
+      return false;
+    }
+  }
+
+  /// Get current user profile for setup (with fallback for server errors)
+  Future<UserProfileResponse?> getProfileForSetup() async {
+    try {
+      return await loadMe();
+    } catch (e) {
+      // If we get a server error, return null to indicate profile needs setup
+      if (e is DioException) {
+        final statusCode = e.response?.statusCode;
+        if (statusCode != null && statusCode >= 500) {
+          return null;
+        }
+      }
+      rethrow;
+    }
+  }
+
+  /// Update user profile with validation
+  Future<UserProfileResponse> updateProfile({
+    String? name,
+    DateTime? birthday,
+    String? gender,
+    String? country,
+    String? city,
+  }) async {
+    // Validate input data
+    if (name != null && name.trim().isEmpty) {
+      throw Exception('Name cannot be empty');
+    }
+
+    if (gender != null &&
+        !['male', 'female', 'other', 'prefer_not_to_say'].contains(gender)) {
+      throw Exception('Invalid gender value');
+    }
+
+    final updateData = UserUpdate(
+      name: name?.trim(),
+      birthday: birthday,
+      gender: gender,
+      country: country?.trim(),
+      city: city?.trim(),
+    );
+
+    try {
+      return await api.users.updateMyProfileApiV1UsersMePut(body: updateData);
+    } catch (e) {
+      if (e is DioException) {
+        final statusCode = e.response?.statusCode;
+        if (statusCode == 400) {
+          throw Exception('Invalid data provided: ${e.message}');
+        } else if (statusCode == 401) {
+          throw Exception('Authentication required');
+        } else if (statusCode != null && statusCode >= 500) {
+          throw Exception('Server error: $statusCode - ${e.message}');
+        }
+      }
+      rethrow;
+    }
+  }
+
+  /// Get current user profile or null if not available
+  Future<UserProfileResponse?> getCurrentProfile() async {
+    try {
+      return await loadMe();
+    } catch (e) {
+      return null;
+    }
+  }
+}

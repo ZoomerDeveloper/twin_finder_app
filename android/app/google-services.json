@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "773404912680",
+    "project_id": "twin-finder-bb4ac",
+    "storage_bucket": "twin-finder-bb4ac.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:773404912680:android:b76b8ce9c04494643ed91d",
+        "android_client_info": {
+          "package_name": "com.twin.finderapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "773404912680-nc75ggos52okapgo830akl4pnakt83hs.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.twin.finderapp",
+            "certificate_hash": "4a3b7c8c106a5bc43acf7a529d5771a5cb8ddac2"
+          }
+        },
+        {
+          "client_id": "773404912680-pcgchr5usfunfvbpad2ouf4nm2tq13u0.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBELevNpWPc4LPFd3k1XogJm4-yl8bAAGM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "773404912680-pcgchr5usfunfvbpad2ouf4nm2tq13u0.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "773404912680-hbjs9mr5gtdj0id4cs6c8012aebuk00t.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.twin.finder"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

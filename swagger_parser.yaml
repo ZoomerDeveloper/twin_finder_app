@@ -1,0 +1,37 @@
+swagger_parser:
+  # выбери один источник
+  # schema_path: schemes/openapi.json
+  # schema_url: http://161.97.64.169:8000/api/v1/openapi.json
+  schema_path: schemes/openapi.patched.json
+
+  output_directory: lib/api
+  language: dart
+  json_serializer: json_serializable
+
+  root_client: true
+  root_client_name: ApiClient
+  export_file: true
+
+  # меньше рутины при вызовах + гибкость в перехватчиках
+  extras_parameter_by_default: true
+  dio_options_parameter_by_default: true
+
+  # не падать на новых enum-значениях
+  unknown_enum_value: true
+
+  # для Flutter/Web и multipart
+  use_multipart_file: true
+
+  exclude_tags:
+    - share
+
+  # опционально: склеить клиентов в один класс
+  # merge_clients: true
+
+  # подсократить уродливые operationId (пример)
+  replacement_rules:
+    - pattern: "^(.+?)api_v1_"
+      replacement: ""
+    - pattern: "_(get|post|put|patch|delete)$"
+      replacement: ""
+      

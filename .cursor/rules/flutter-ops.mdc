@@ -1,0 +1,30 @@
+---
+description: Flutter ops checklist with success criteria
+globs:
+  - "**/*"
+alwaysApply: true
+---
+
+# Flutter Ops
+- БАЗОВЫЕ команды (запускай в такой последовательности и НЕ повторяй без причин):
+  1) `flutter pub get`
+     - Done: в выводе нет ошибок resolution; если есть — сначала правка `pubspec.yaml`.
+  2) `flutter analyze`
+     - Done: "No issues found!" или только предупреждения, которые отложены по решению пользователя.
+     - Не запускать повторно, если код не менялся.
+  3) Генерация кода (только если в проекте есть build_runner/json_serializable/freezed):
+     - `dart run build_runner build --delete-conflicting-outputs`
+     - Done: в логе есть "Succeeded after" и нет "Failed after".
+     - НЕ повторять более 1 раза без редактирования исходников *.g.dart/*.freezed.dart или конфликта версий.
+  4) Тесты:
+     - `flutter test`
+     - Done: "All tests passed!".
+     - При падениях — укажи конкретные файлы/строки; не перезапускай без правок.
+- АНДРОИД-сборка:
+  - Команды `flutter build apk`/`appbundle` разрешены ТОЛЬКО после успешных analyze+tests.
+  - `flutter clean` допускается 1 раз за сессию и ТОЛЬКО при явных артефактных сбоях (Gradle cache, "Program type already present", "Dex archive").
+  - После clean ОБЯЗАТЕЛЬНО `flutter pub get`.
+- Веб/десктоп:
+  - Перед `flutter run -d chrome` проверь наличие web в `flutter config --list`; не переключай каналы без явного запроса.
+- МИГРАЦИИ:
+  - Не запускай `dart fix --apply` глобально. Сначала покажи дифф и спроси подтверждение.
