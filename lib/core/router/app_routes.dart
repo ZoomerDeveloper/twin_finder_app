@@ -12,8 +12,11 @@ abstract class AppRoutes {
   static const String faceCapturePage = '/faceCapture';
   static const String emailVerification = '/emailVerification';
   static const String emailCode = '/emailCode';
+  static const String passwordSetup = '/passwordSetup';
   static const String main = '/main'; // Главная страница с BottomNavigationBar
   static const String changeProfileDetails = '/change-profile-details';
+  static const String maintenance =
+      '/maintenance'; // Страница технических работ
 
   static const String deleteAccount = '/deleteAccount';
 
@@ -32,6 +35,8 @@ abstract class AppRoutes {
       faceCapturePage,
       emailVerification,
       emailCode,
+      passwordSetup,
+      maintenance,
     ].contains(route);
   }
 }

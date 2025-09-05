@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:twin_finder/api/models/matches_response.dart';
+import 'package:twin_finder/api/models/match_with_user.dart';
 import 'package:twin_finder/core/utils/app_colors.dart';
 import 'package:twin_finder/features/main/presentation/cubit/matches_cubit.dart';
 
@@ -12,11 +12,18 @@ class TwinFinderPage extends StatefulWidget {
 }
 
 class _TwinFinderPageState extends State<TwinFinderPage> {
+  bool _hasLoadedMatches = false;
+
   @override
   void initState() {
     super.initState();
-    // Load matches when page is initialized
-    context.read<MatchesCubit>().loadMatches();
+    // Load matches only when page is first displayed
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && !_hasLoadedMatches) {
+        _hasLoadedMatches = true;
+        context.read<MatchesCubit>().loadMatches();
+      }
+    });
   }
 
   @override
@@ -207,7 +214,21 @@ class _TwinFinderPageState extends State<TwinFinderPage> {
     );
   }
 
-  Widget _buildMatchCard(Match match) {
+  Color _getSimilarityColor(MatchWithUser match) {
+    if (match.isHighSimilarity) return Colors.green;
+    if (match.isMediumSimilarity) return Colors.orange;
+    if (match.isLowSimilarity) return Colors.red;
+    return Colors.red; // default
+  }
+
+  String _getSimilarityLevel(MatchWithUser match) {
+    if (match.isHighSimilarity) return 'High';
+    if (match.isMediumSimilarity) return 'Medium';
+    if (match.isLowSimilarity) return 'Low';
+    return 'Low'; // default
+  }
+
+  Widget _buildMatchCard(MatchWithUser match) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -228,7 +249,7 @@ class _TwinFinderPageState extends State<TwinFinderPage> {
             width: 80,
             height: 80,
             decoration: BoxDecoration(
-              color: match.similarityColor.withOpacity(0.1),
+              color: _getSimilarityColor(match).withOpacity(0.1),
               borderRadius: BorderRadius.circular(40),
             ),
             child: Center(
@@ -246,7 +267,7 @@ class _TwinFinderPageState extends State<TwinFinderPage> {
                             style: TextStyle(
                               fontSize: 32,
                               fontWeight: FontWeight.bold,
-                              color: match.similarityColor,
+                              color: _getSimilarityColor(match),
                             ),
                           );
                         },
@@ -257,7 +278,7 @@ class _TwinFinderPageState extends State<TwinFinderPage> {
                       style: TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
-                        color: match.similarityColor,
+                        color: _getSimilarityColor(match),
                       ),
                     ),
             ),
@@ -284,7 +305,7 @@ class _TwinFinderPageState extends State<TwinFinderPage> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: match.similarityColor,
+              color: _getSimilarityColor(match),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
@@ -301,9 +322,9 @@ class _TwinFinderPageState extends State<TwinFinderPage> {
 
           // Similarity Level
           Text(
-            match.similarityLevel,
+            _getSimilarityLevel(match),
             style: TextStyle(
-              color: match.similarityColor,
+              color: _getSimilarityColor(match),
               fontSize: 12,
               fontWeight: FontWeight.w500,
             ),
@@ -322,12 +343,15 @@ class _TwinFinderPageState extends State<TwinFinderPage> {
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.transparent,
-                  foregroundColor: match.similarityColor,
+                  foregroundColor: _getSimilarityColor(match),
                   elevation: 0,
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20),
-                    side: BorderSide(color: match.similarityColor, width: 1),
+                    side: BorderSide(
+                      color: _getSimilarityColor(match),
+                      width: 1,
+                    ),
                   ),
                 ),
                 child: const Text(

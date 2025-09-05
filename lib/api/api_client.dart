@@ -10,61 +10,18 @@ import 'users/users_client.dart';
 import 'photos/photos_client.dart';
 import 'matches/matches_client.dart';
 import 'referral/referral_client.dart';
+import 'locations/locations_client.dart';
 import 'admin/admin_client.dart';
 
-/// Twin Finder Backend `v1.0.0`.
+/// TwinFinder API `v1.0.0`.
 ///
+/// Production-grade REST API powering TwinFinder.
 ///
-///         # TwinFinder Backend API.
-///        
-///         A comprehensive API for the TwinFinder social app that uses facial recognition technology .
-///         to match users with their closest visual doppelgängers.
-///        
-///         ## 🔐 Authentication.
-///        
-///         The API uses JWT-based authentication with access and refresh tokens:.
-///        
-///         - **Access Tokens**: Short-lived tokens (1 hour) for API authentication.
-///         - **Refresh Tokens**: Long-lived tokens (7-30 days) for token renewal.
-///         - **Token Rotation**: Refresh tokens are single-use and invalidated after use.
-///        
-///         ## 📚 API Documentation.
-///        
-///         - **Swagger UI**: Interactive API documentation at `/docs`.
-///         - **ReDoc**: Alternative documentation at `/redoc`.
-///         - **OpenAPI Schema**: Raw OpenAPI specification at `/api/v1/openapi.json`.
-///        
-///         ## 🚀 Quick Start.
-///        
-///         1. **Register**: Use `/api/v1/auth/register/initiate` and `/api/v1/auth/register/confirm`.
-///         2. **Login**: Use `/api/v1/auth/login` to get JWT tokens.
-///         3. **Authenticate**: Include `Authorization: Bearer <access_token>` in requests.
-///         4. **Refresh**: Use `/api/v1/auth/refresh` to get new tokens.
-///         5. **Logout**: Use `/api/v1/auth/logout` to invalidate tokens.
-///        
-///         ## 🔒 Security Features.
-///        
-///         - JWT-based authentication with secure token handling.
-///         - Rate limiting on API endpoints.
-///         - CORS protection with configurable origins.
-///         - Input validation with Pydantic schemas.
-///         - Secure file upload handling.
-///         - GDPR compliance features.
-///        
-///         ## 📊 Rate Limiting.
-///        
-///         API endpoints are rate-limited to prevent abuse:.
-///        
-///         - Authentication endpoints: 5 requests per minute.
-///         - General endpoints: 100 requests per minute.
-///         - File uploads: 10 requests per minute.
-///        
-///         ## 🛠️ Development.
-///        
-///         - **Environment**: Set `ENVIRONMENT=development` for detailed error messages.
-///         - **Logging**: Structured logging with configurable levels.
-///         - **Health Check**: Use `/health` to check API status.
-///        
+/// - Authentication: Email + Social (Google/Apple via Firebase).
+/// - Users & Profiles: creation, updates, verification.
+/// - Photos & Matches: uploads, matching, statistics.
+/// - Operational: health, metrics, rate limits.
+///
 class ApiClient {
   ApiClient(
     Dio dio, {
@@ -83,6 +40,7 @@ class ApiClient {
   PhotosClient? _photos;
   MatchesClient? _matches;
   ReferralClient? _referral;
+  LocationsClient? _locations;
   AdminClient? _admin;
 
   FallbackClient get fallback => _fallback ??= FallbackClient(_dio, baseUrl: _baseUrl);
@@ -96,6 +54,8 @@ class ApiClient {
   MatchesClient get matches => _matches ??= MatchesClient(_dio, baseUrl: _baseUrl);
 
   ReferralClient get referral => _referral ??= ReferralClient(_dio, baseUrl: _baseUrl);
+
+  LocationsClient get locations => _locations ??= LocationsClient(_dio, baseUrl: _baseUrl);
 
   AdminClient get admin => _admin ??= AdminClient(_dio, baseUrl: _baseUrl);
 }

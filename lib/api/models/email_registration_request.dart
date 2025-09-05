@@ -6,19 +6,17 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'email_registration_request.g.dart';
 
-/// Email registration request schema (Step 1) with password.
+/// Email registration request schema (Step 1).
 @JsonSerializable()
 class EmailRegistrationRequest {
-  const EmailRegistrationRequest({required this.email, required this.password});
-
-  factory EmailRegistrationRequest.fromJson(Map<String, Object?> json) =>
-      _$EmailRegistrationRequestFromJson(json);
-
+  const EmailRegistrationRequest({
+    required this.email,
+  });
+  
+  factory EmailRegistrationRequest.fromJson(Map<String, Object?> json) => _$EmailRegistrationRequestFromJson(json);
+  
   /// User email address
   final String email;
-
-  /// User password
-  final String password;
 
   Map<String, Object?> toJson() => _$EmailRegistrationRequestToJson(this);
 }

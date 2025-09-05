@@ -422,7 +422,6 @@ class _LocationPageState extends State<LocationPage> {
   Widget build(BuildContext context) {
     final countryActive =
         _countryFocus.hasFocus || _countryCtrl.text.isNotEmpty;
-    final cityActive = _cityFocus.hasFocus || _cityCtrl.text.isNotEmpty;
 
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
@@ -569,7 +568,7 @@ class _LocationPageState extends State<LocationPage> {
                             ),
                           ),
                         ),
-                        _floatingLabel(L.country(context), countryActive),
+                        _floatingLabel('Country', countryActive),
                       ],
                     ),
                   ),
@@ -598,10 +597,6 @@ class _LocationPageState extends State<LocationPage> {
                       itemCount: _citySuggestions.length,
                       itemBuilder: (context, i) {
                         final c = _citySuggestions[i];
-                        final subtitle = [
-                          if (c.admin1 != null) c.admin1!,
-                          c.country,
-                        ].join(', ');
                         return Column(
                           children: [
                             ListTile(
@@ -685,7 +680,7 @@ class _LocationPageState extends State<LocationPage> {
                           ),
                         ),
                         _floatingLabel(
-                          L.city(context),
+                          'City',
                           true ==
                               (_cityFocus.hasFocus ||
                                   _cityCtrl.text.isNotEmpty),
@@ -734,7 +729,9 @@ class _LocationPageState extends State<LocationPage> {
                                 // Check if update was successful and navigate
                                 if (mounted) {
                                   final currentState = authCubit.state;
-                                  if (currentState is AuthAuthenticated) {
+                                  if (currentState is AuthAuthenticated ||
+                                      currentState
+                                          is AuthNeedsProfileSetupWithData) {
                                     debugPrint(
                                       'Location updated successfully, navigating to face capture page',
                                     );

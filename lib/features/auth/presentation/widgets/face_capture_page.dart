@@ -12,6 +12,8 @@ import 'package:twin_finder/features/auth/presentation/widgets/background_widget
 // import 'package:twin_finder/features/auth/presentation/widgets/png_overlay_mask.dart';
 import 'package:twin_finder/core/utils/error_handler.dart';
 import 'package:twin_finder/core/router/app_routes.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:twin_finder/features/auth/presentation/cubit/auth_cubit.dart';
 
 class FaceCapturePage extends StatefulWidget {
   const FaceCapturePage({super.key});
@@ -29,10 +31,9 @@ class _FaceCapturePageState extends State<FaceCapturePage>
   late List<CameraDescription> _cameras;
   bool _isBusy = false;
 
-  // Новое: фаза/замороженный кадр/таймер
+  // Новое: фаза/замороженный кадр
   _Phase _phase = _Phase.live;
   XFile? _shot;
-  Timer? _phaseTimer;
 
   @override
   void initState() {
@@ -44,7 +45,6 @@ class _FaceCapturePageState extends State<FaceCapturePage>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _phaseTimer?.cancel();
     _controller?.dispose();
     super.dispose();
   }
@@ -129,12 +129,14 @@ class _FaceCapturePageState extends State<FaceCapturePage>
       // При желании можно остановить превью (не обязательно)
       // await _controller?.pausePreview();
 
-      // Имитируем обработку, затем показываем результат
-      _phaseTimer?.cancel();
-      _phaseTimer = Timer(const Duration(seconds: 5), () {
-        if (!mounted) return;
+      // Загружаем фотографию на сервер
+      final photoFile = File(file.path);
+      await context.read<AuthCubit>().uploadPhoto(photoFile);
+
+      // После успешной загрузки показываем результат
+      if (mounted) {
         setState(() => _phase = _Phase.result);
-      });
+      }
     } catch (e) {
       if (mounted) {
         ErrorHandler.showError(
@@ -142,6 +144,11 @@ class _FaceCapturePageState extends State<FaceCapturePage>
           '${L.error(context)}: $e',
           title: L.error(context),
         );
+        // Возвращаемся к live режиму при ошибке
+        setState(() {
+          _phase = _Phase.live;
+          _shot = null;
+        });
       }
     } finally {
       if (mounted) setState(() => _isBusy = false);
@@ -150,111 +157,123 @@ class _FaceCapturePageState extends State<FaceCapturePage>
 
   @override
   Widget build(BuildContext context) {
-    // ты градиент сейчас не используешь для карточки — оставляю как было
-    // final gradient = const LinearGradient(
-    //   begin: Alignment.topCenter,
-    //   end: Alignment.bottomCenter,
-    //   colors: [Color(0xFFFF3F8E), Color(0xFFFF7A00)],
-    // );
-
     return Scaffold(
       body: BackgroundWidget(
-        child: FutureBuilder<void>(
-          future: _initFuture,
-          builder: (context, snapshot) {
-            final ready =
-                (snapshot.connectionState == ConnectionState.done &&
-                    _controller != null &&
-                    _controller!.value.isInitialized) ||
-                _phase != _Phase.live;
+        child: BlocListener<AuthCubit, AuthState>(
+          listener: (context, state) {
+            if (state is AuthPhotoUploaded) {
+              // Фотография успешно загружена
+              if (mounted) {
+                setState(() => _phase = _Phase.result);
+              }
+            } else if (state is AuthFailure) {
+              // Ошибка при загрузке фотографии
+              if (mounted) {
+                ErrorHandler.showError(
+                  context,
+                  '${L.error(context)}: ${state.message}',
+                  title: L.error(context),
+                );
+                // Возвращаемся к live режиму при ошибке
+                setState(() {
+                  _phase = _Phase.live;
+                  _shot = null;
+                });
+              }
+            }
+          },
+          child: FutureBuilder<void>(
+            future: _initFuture,
+            builder: (context, snapshot) {
+              final ready =
+                  (snapshot.connectionState == ConnectionState.done &&
+                      _controller != null &&
+                      _controller!.value.isInitialized) ||
+                  _phase != _Phase.live;
 
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 8),
-                // Back
-                Padding(
-                  padding: const EdgeInsets.only(left: 8),
-                  child: IconButton(
-                    icon: SvgPicture.asset(AppIcons.back, color: Colors.white),
-                    onPressed: () {
-                      HapticFeedback.lightImpact();
-                      Navigator.of(context).maybePop();
-                    },
-                  ),
-                ),
-                // Title
-                const SizedBox(height: 16),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: Text(
-                    L.takePhoto(context),
-                    style: TextStyle(
-                      fontSize: 48,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.white,
-                      height: 1,
-                      letterSpacing: -0.48,
-                      fontFamily: 'Bricolage Grotesque',
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 8),
+                  // Back
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8),
+                    child: IconButton(
+                      icon: SvgPicture.asset(
+                        AppIcons.back,
+                        color: Colors.white,
+                      ),
+                      onPressed: () {
+                        HapticFeedback.lightImpact();
+                        Navigator.of(context).maybePop();
+                      },
                     ),
                   ),
-                ),
-                const SizedBox(height: 16),
-
-                // Карточка с камерой + маской + overlay-фазы
-                Expanded(
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 16),
-                    decoration: BoxDecoration(
-                      // gradient: gradient,
-                      borderRadius: BorderRadius.circular(28),
-                    ),
-                    padding: const EdgeInsets.all(4),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(24),
-                      child: Container(
-                        color: Colors.white.withOpacity(0.85),
-                        child: ready
-                            ? _CameraWithMask(
-                                controller: _controller!,
-                                phase: _phase,
-                                frozen: _shot,
-                                onCameraTap:
-                                    (ready && !_isBusy && _phase == _Phase.live)
-                                    ? _takePicture
-                                    : null,
-                                onSeeMatches: () {
-                                  HapticFeedback.lightImpact();
-                                  // Navigate to main page with matches
-                                  Navigator.of(context).pushNamedAndRemoveUntil(
-                                    AppRoutes.main,
-                                    (route) => false,
-                                  );
-                                },
-                              )
-                            : const Center(child: CustomCircularProgress()),
+                  // Title
+                  const SizedBox(height: 16),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    child: Text(
+                      L.takePhoto(context),
+                      style: TextStyle(
+                        fontSize: 48,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                        height: 1,
+                        letterSpacing: -0.48,
+                        fontFamily: 'Bricolage Grotesque',
                       ),
                     ),
                   ),
-                ),
-              ],
-            );
-          },
+                  const SizedBox(height: 16),
+
+                  // Карточка с камерой + маской + overlay-фазы
+                  Expanded(
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 16),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(28),
+                      ),
+                      padding: const EdgeInsets.all(4),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(24),
+                        child: Container(
+                          color: Colors.white.withOpacity(0.85),
+                          child: ready
+                              ? _CameraWithMask(
+                                  controller: _controller!,
+                                  phase: _phase,
+                                  frozen: _shot,
+                                  onCameraTap:
+                                      (ready &&
+                                          !_isBusy &&
+                                          _phase == _Phase.live)
+                                      ? _takePicture
+                                      : null,
+                                  onSeeMatches: () {
+                                    HapticFeedback.lightImpact();
+                                    // Navigate to main page with matches
+                                    Navigator.of(
+                                      context,
+                                    ).pushNamedAndRemoveUntil(
+                                      AppRoutes.main,
+                                      (route) => false,
+                                    );
+                                  },
+                                )
+                              : const Center(child: CustomCircularProgress()),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
         ),
       ),
     );
   }
-}
-
-// Твоя старая заготовка (не используется, оставлю на всякий)
-Widget _buildNonStretchedPreview(CameraController controller) {
-  return LayoutBuilder(
-    builder: (context, constraints) {
-      final pvSize = controller.value.previewSize;
-      if (pvSize == null) return CameraPreview(controller);
-      return AspectRatio(aspectRatio: 9 / 16, child: CameraPreview(controller));
-    },
-  );
 }
 
 /// Вью с превью камеры (или замороженным снимком) + PNG-маска и overlay фаз
@@ -732,7 +751,6 @@ class _BaseSwitcher extends InheritedWidget {
     required this.frozen,
     required this.mirrorFrozen,
     required super.child,
-    super.key,
   });
 
   static _BaseSwitcher? of(BuildContext context) =>

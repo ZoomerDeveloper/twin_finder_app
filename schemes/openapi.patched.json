@@ -1,24 +1,10 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Twin Finder Backend",
-    "description": "\n        # TwinFinder Backend API\n        \n        A comprehensive API for the TwinFinder social app that uses facial recognition technology \n        to match users with their closest visual doppelgängers.\n        \n        ## 🔐 Authentication\n        \n        The API uses JWT-based authentication with access and refresh tokens:\n        \n        - **Access Tokens**: Short-lived tokens (1 hour) for API authentication\n        - **Refresh Tokens**: Long-lived tokens (7-30 days) for token renewal\n        - **Token Rotation**: Refresh tokens are single-use and invalidated after use\n        \n        ## 📚 API Documentation\n        \n        - **Swagger UI**: Interactive API documentation at `/docs`\n        - **ReDoc**: Alternative documentation at `/redoc`\n        - **OpenAPI Schema**: Raw OpenAPI specification at `/api/v1/openapi.json`\n        \n        ## 🚀 Quick Start\n        \n        1. **Register**: Use `/api/v1/auth/register/initiate` and `/api/v1/auth/register/confirm`\n        2. **Login**: Use `/api/v1/auth/login` to get JWT tokens\n        3. **Authenticate**: Include `Authorization: Bearer <access_token>` in requests\n        4. **Refresh**: Use `/api/v1/auth/refresh` to get new tokens\n        5. **Logout**: Use `/api/v1/auth/logout` to invalidate tokens\n        \n        ## 🔒 Security Features\n        \n        - JWT-based authentication with secure token handling\n        - Rate limiting on API endpoints\n        - CORS protection with configurable origins\n        - Input validation with Pydantic schemas\n        - Secure file upload handling\n        - GDPR compliance features\n        \n        ## 📊 Rate Limiting\n        \n        API endpoints are rate-limited to prevent abuse:\n        \n        - Authentication endpoints: 5 requests per minute\n        - General endpoints: 100 requests per minute\n        - File uploads: 10 requests per minute\n        \n        ## 🛠️ Development\n        \n        - **Environment**: Set `ENVIRONMENT=development` for detailed error messages\n        - **Logging**: Structured logging with configurable levels\n        - **Health Check**: Use `/health` to check API status\n        ",
-    "contact": {
-      "name": "TwinFinder Support",
-      "email": "support@twinfinder.app"
-    },
-    "license": {
-      "name": "Proprietary - All rights reserved",
-      "url": "https://twinfinder.app/legal"
-    },
+    "title": "TwinFinder API",
+    "description": "Production-grade REST API powering TwinFinder.\n\n- Authentication: Email + Social (Google/Apple via Firebase)\n- Users & Profiles: creation, updates, verification\n- Photos & Matches: uploads, matching, statistics\n- Operational: health, metrics, rate limits\n",
     "version": "1.0.0"
   },
-  "servers": [
-    {
-      "url": "http://161.97.64.169:8000",
-      "description": "Current server"
-    }
-  ],
   "paths": {
     "/": {
       "get": {
@@ -30,7 +16,9 @@
             "description": "API information including version and documentation links",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+
+                }
               }
             }
           }
@@ -47,7 +35,9 @@
             "description": "Health status including API version and environment",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+
+                }
               }
             }
           }
@@ -64,7 +54,9 @@
             "description": "Detailed health status including all system components",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+
+                }
               }
             }
           }
@@ -81,7 +73,9 @@
             "description": "Prometheus-formatted metrics",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+
+                }
               }
             }
           }
@@ -130,56 +124,13 @@
         }
       }
     },
-    "/api/v1/auth/login/oauth2": {
-      "post": {
-        "tags": [
-          "authentication"
-        ],
-        "summary": "Login Oauth2",
-        "description": "OAuth2 compatible token endpoint.\n\nThis endpoint provides OAuth2-compatible authentication for third-party\napplications and OAuth2 clients. It accepts form-encoded data instead of JSON.\n\n**OAuth2 Compatibility:**\n- Accepts standard OAuth2 password grant flow\n- Uses form-encoded data (application/x-www-form-urlencoded)\n- Returns standard OAuth2 token response format\n- Compatible with OAuth2 libraries and tools\n\n**Use Cases:**\n- Third-party application integration\n- OAuth2 client libraries\n- API testing tools that expect OAuth2 format\n\nArgs:\n    form_data: OAuth2PasswordRequestForm containing:\n        - username: User's email address\n        - password: User's password\n        - grant_type: Should be \"password\" for this endpoint\n    auth_service: Authentication service dependency\n    \nReturns:\n    AuthResponse: Authentication response with JWT tokens\n    \nRaises:\n    HTTPException (401): If username or password is incorrect\n    HTTPException (422): If form data validation fails\n    \nExample Request (form-encoded):\n    ```\n    username=user@example.com&password=securepassword123&grant_type=password\n    ```\n    \nExample Response:\n    ```json\n    {\n        \"success\": true,\n        \"message\": \"Login successful\",\n        \"data\": {\n            \"access_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n            \"refresh_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n            \"token_type\": \"bearer\",\n            \"expires_in\": 3600\n        }\n    }\n    ```",
-        "operationId": "login_oauth2_api_v1_auth_login_oauth2_post",
-        "requestBody": {
-          "content": {
-            "application/x-www-form-urlencoded": {
-              "schema": {
-                "$ref": "#/components/schemas/Body_login_oauth2_api_v1_auth_login_oauth2_post"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AuthResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/auth/register/initiate": {
+    "/api/v1/auth/register/email/initiate": {
       "post": {
         "tags": [
           "authentication"
         ],
         "summary": "Initiate Registration",
-        "description": "Initiate email registration process (Step 1 of 2).\n\nThis endpoint starts the two-step email registration process by sending\na verification code to the provided email address.\n\n**Registration Flow:**\n1. User provides email address\n2. System validates email format and availability\n3. Verification code is generated and sent via email\n4. User receives code and proceeds to step 2\n\n**Security Features:**\n- Email validation and availability check\n- Rate limiting on email sending\n- Verification codes expire after 15 minutes\n- Prevents duplicate registrations\n\nArgs:\n    registration_data: EmailRegistrationRequest containing:\n        - email: Valid email address for registration\n    auth_service: Authentication service dependency\n    \nReturns:\n    AuthResponse: Response indicating verification code was sent\n    \nRaises:\n    HTTPException (400): If email already exists\n    HTTPException (400): If registration already pending\n    HTTPException (422): If email format is invalid\n    \nExample Request:\n    ```json\n    {\n        \"email\": \"newuser@example.com\"\n    }\n    ```\n    \nExample Response:\n    ```json\n    {\n        \"success\": true,\n        \"message\": \"Verification code sent to your email. Please check your inbox and enter the code to complete registration.\",\n        \"data\": null\n    }\n    ```",
-        "operationId": "initiate_registration_api_v1_auth_register_initiate_post",
+        "operationId": "initiateRegistration",
         "requestBody": {
           "content": {
             "application/json": {
@@ -192,11 +143,15 @@
         },
         "responses": {
           "200": {
-            "description": "Successful Response",
+            "description": "Verification code sent",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AuthResponse"
+                  "$ref": "#/components/schemas/BasicMessageResponse"
+                },
+                "example": {
+                  "success": true,
+                  "message": "Code sent"
                 }
               }
             }
@@ -220,8 +175,8 @@
           "authentication"
         ],
         "summary": "Confirm Registration",
-        "description": "Confirm email registration and create user account (Step 2 of 2).\n\nThis endpoint completes the registration process by verifying the email\nverification code and creating the user account with the provided details.\n\n**Registration Completion:**\n1. User provides email, verification code, password, and name\n2. System validates verification code and expiration\n3. User account is created with hashed password\n4. JWT tokens are generated and returned\n5. User is automatically logged in\n\n**Security Features:**\n- Verification code validation and expiration check\n- Password hashing using bcrypt\n- Automatic account activation\n- GDPR consent tracking\n\nArgs:\n    confirmation_data: EmailRegistrationConfirm containing:\n        - email: Email address used in step 1\n        - verification_code: 6-digit code sent via email\n        - password: User's chosen password (min 8 characters)\n        - name: User's display name\n    auth_service: Authentication service dependency\n    \nReturns:\n    AuthResponse: Authentication response with JWT tokens\n    \nRaises:\n    HTTPException (400): If verification code is invalid\n    HTTPException (400): If verification code has expired\n    HTTPException (400): If email not found in pending registrations\n    HTTPException (422): If request data validation fails\n    \nExample Request:\n    ```json\n    {\n        \"email\": \"newuser@example.com\",\n        \"verification_code\": \"123456\",\n        \"password\": \"securepassword123\",\n        \"name\": \"John Doe\"\n    }\n    ```\n    \nExample Response:\n    ```json\n    {\n        \"success\": true,\n        \"message\": \"Registration completed successfully! Welcome to TwinFinder.\",\n        \"data\": {\n            \"access_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n            \"refresh_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n            \"token_type\": \"bearer\",\n            \"expires_in\": 3600\n        }\n    }\n    ```",
-        "operationId": "confirm_registration_api_v1_auth_register_confirm_post",
+        "description": "Confirm email registration and create user account (Step 2 of 2).\n\nThis endpoint completes the registration process by verifying the email\nverification code and creating a basic user account. The user will need\nto complete their profile with additional information before accessing\napplication features.\n\n**Registration Completion:**\n1. User provides email and verification code\n2. System validates verification code and expiration\n3. Basic user account is created (email verified)\n4. JWT tokens are generated and returned\n5. User is automatically logged in but profile is incomplete\n\n**Next Steps:**\n- User must complete profile via PUT /api/v1/users/me\n- Required fields: password, name, city, country, birth date, gender\n- Profile completion is required before accessing app features\n\n**Security Features:**\n- Verification code validation and expiration check\n- Automatic account activation\n- GDPR consent tracking\n- Profile completion tracking\n\nArgs:\n    confirmation_data: EmailRegistrationConfirm containing:\n        - email: Email address used in step 1\n        - verification_code: 6-digit code sent via email\n    auth_service: Authentication service dependency\n    \nReturns:\n    AuthResponse: Authentication response with JWT tokens\n    \nRaises:\n    HTTPException (400): If verification code is invalid\n    HTTPException (400): If verification code has expired\n    HTTPException (400): If email not found in pending registrations\n    HTTPException (422): If request data validation fails\n    \nExample Request:\n    ```json\n    {\n        \"email\": \"newuser@example.com\",\n        \"verification_code\": \"123456\"\n    }\n    ```\n    \nExample Response:\n    ```json\n    {\n        \"success\": true,\n        \"message\": \"Registration completed successfully! Please complete your profile.\",\n        \"data\": {\n            \"access_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n            \"refresh_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n            \"token_type\": \"bearer\",\n            \"expires_in\": 3600\n        }\n    }\n    ```",
+        "operationId": "confirmRegistration",
         "requestBody": {
           "content": {
             "application/json": {
@@ -232,67 +187,6 @@
           },
           "required": true
         },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AuthResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/auth/register": {
-      "post": {
-        "tags": [
-          "authentication"
-        ],
-        "summary": "Register",
-        "description": "Register a new user account (Legacy endpoint - deprecated).\n\n**⚠️ DEPRECATED: Use /register/initiate and /register/confirm instead**\n\nThis legacy endpoint creates a user account directly without email verification.\nIt's maintained for backward compatibility but should not be used in new applications.\n\n**Security Considerations:**\n- No email verification required\n- Account is created immediately\n- Less secure than the two-step registration process\n- Email verification token is generated but not required for login\n\n**Migration Path:**\n- New applications should use /register/initiate and /register/confirm\n- This endpoint will be removed in a future version\n\nArgs:\n    email: User's email address (must be unique)\n    password: User's password (minimum 8 characters)\n    name: User's display name\n    auth_service: Authentication service dependency\n    \nReturns:\n    AuthResponse: Authentication response with JWT tokens\n    \nRaises:\n    HTTPException (400): If email already exists\n    HTTPException (422): If request data validation fails\n    \nExample Request:\n    ```json\n    {\n        \"email\": \"user@example.com\",\n        \"password\": \"securepassword123\",\n        \"name\": \"John Doe\"\n    }\n    ```\n    \nExample Response:\n    ```json\n    {\n        \"success\": true,\n        \"message\": \"Registration successful. Please verify your email.\",\n        \"data\": {\n            \"access_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n            \"refresh_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n            \"token_type\": \"bearer\",\n            \"expires_in\": 3600\n        }\n    }\n    ```",
-        "operationId": "register_api_v1_auth_register_post",
-        "parameters": [
-          {
-            "name": "email",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Email"
-            }
-          },
-          {
-            "name": "password",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Password"
-            }
-          },
-          {
-            "name": "name",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Name"
-            }
-          }
-        ],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -408,7 +302,7 @@
         ],
         "summary": "Get Current User Info",
         "description": "Get current user information.\n\nArgs:\n    current_user: Current authenticated user\n    auth_service: Authentication service\n\nReturns:\n    User authentication information",
-        "operationId": "get_current_user_info_api_v1_auth_me_get",
+        "operationId": "getMyProfile",
         "parameters": [
           {
             "name": "token",
@@ -458,7 +352,7 @@
         ],
         "summary": "Forgot Password",
         "description": "Request password reset.\n\nArgs:\n    reset_data: Password reset request data\n    auth_service: Authentication service\n\nReturns:\n    Authentication response",
-        "operationId": "forgot_password_api_v1_auth_forgot_password_post",
+        "operationId": "forgotPassword",
         "requestBody": {
           "content": {
             "application/json": {
@@ -500,7 +394,7 @@
         ],
         "summary": "Reset Password",
         "description": "Reset password using reset token.\n\nArgs:\n    reset_data: Password reset confirmation data\n    auth_service: Authentication service\n\nReturns:\n    Authentication response\n\nRaises:\n    HTTPException: If token is invalid or expired",
-        "operationId": "reset_password_api_v1_auth_reset_password_post",
+        "operationId": "resetPassword",
         "requestBody": {
           "content": {
             "application/json": {
@@ -542,7 +436,7 @@
         ],
         "summary": "Verify Email",
         "description": "Verify email using verification token.\n\nArgs:\n    verification_data: Email verification data\n    auth_service: Authentication service\n\nReturns:\n    Authentication response\n\nRaises:\n    HTTPException: If token is invalid or expired",
-        "operationId": "verify_email_api_v1_auth_verify_email_post",
+        "operationId": "verifyEmail",
         "requestBody": {
           "content": {
             "application/json": {
@@ -584,7 +478,7 @@
         ],
         "summary": "Change Password",
         "description": "Change user password.\n\nArgs:\n    current_password: Current password\n    new_password: New password\n    current_user: Current authenticated user\n    auth_service: Authentication service\n\nReturns:\n    Authentication response\n\nRaises:\n    HTTPException: If current password is incorrect",
-        "operationId": "change_password_api_v1_auth_change_password_post",
+        "operationId": "changePassword",
         "parameters": [
           {
             "name": "current_password",
@@ -652,7 +546,7 @@
         ],
         "summary": "Blacklist Token",
         "description": "Blacklist a token (admin function).\n\nArgs:\n    blacklist_data: Token blacklist data\n    auth_service: Authentication service\n\nReturns:\n    Token blacklist response",
-        "operationId": "blacklist_token_api_v1_auth_blacklist_token_post",
+        "operationId": "blacklistToken",
         "requestBody": {
           "content": {
             "application/json": {
@@ -693,8 +587,8 @@
           "authentication"
         ],
         "summary": "Login Google",
-        "description": "Authenticate user with Google OAuth (Mobile Flow).\n\nThis endpoint is designed for mobile applications that use Google Sign-In SDK\nand receive ID tokens directly from the mobile app.\n\nArgs:\n    login_data: Google login request data with ID token\n    auth_service: Authentication service\n\nReturns:\n    Social login response with tokens and user info\n\nRaises:\n    HTTPException: If Google authentication fails",
-        "operationId": "login_google_api_v1_auth_login_google_post",
+        "description": "Authenticate user with Firebase Google Authentication.\n\nThis endpoint is designed for mobile applications that use Firebase Authentication\nand receive Firebase ID tokens from Google sign-in.\n\nArgs:\n    login_data: Google login request data with Firebase ID token only\n    auth_service: Authentication service\n\nReturns:\n    Social login response with tokens and user info\n\nRaises:\n    HTTPException: If Google authentication fails",
+        "operationId": "loginWithGoogle",
         "requestBody": {
           "content": {
             "application/json": {
@@ -729,73 +623,14 @@
         }
       }
     },
-    "/api/v1/auth/login/google/web": {
-      "get": {
-        "tags": [
-          "authentication"
-        ],
-        "summary": "Login Google Web",
-        "description": "Authenticate user with Google OAuth (Web Flow).\n\nThis endpoint is designed for web applications that use OAuth2 authorization code flow.\nThe frontend redirects users to Google OAuth, gets an authorization code, and sends it here.\n\nArgs:\n    code: Authorization code from Google OAuth\n    state: Optional state parameter for CSRF protection\n    auth_service: Authentication service\n\nReturns:\n    Social login response with tokens and user info\n\nRaises:\n    HTTPException: If Google authentication fails",
-        "operationId": "login_google_web_api_v1_auth_login_google_web_get",
-        "parameters": [
-          {
-            "name": "code",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Code"
-            }
-          },
-          {
-            "name": "state",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "State"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SocialLoginResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/v1/auth/login/apple": {
       "post": {
         "tags": [
           "authentication"
         ],
         "summary": "Login Apple",
-        "description": "Authenticate user with Apple OAuth.\n\nArgs:\n    login_data: Apple login request data\n    auth_service: Authentication service\n\nReturns:\n    Social login response with tokens and user info\n\nRaises:\n    HTTPException: If Apple authentication fails",
-        "operationId": "login_apple_api_v1_auth_login_apple_post",
+        "description": "Authenticate user with Firebase Apple Authentication.\n\nThis endpoint is designed for mobile applications that use Firebase Authentication\nand receive Firebase ID tokens from Apple sign-in.\n\nArgs:\n    login_data: Apple login request data with Firebase ID token only\n    auth_service: Authentication service\n\nReturns:\n    Social login response with tokens and user info\n\nRaises:\n    HTTPException: If Apple authentication fails",
+        "operationId": "loginWithApple",
         "requestBody": {
           "content": {
             "application/json": {
@@ -837,7 +672,7 @@
         ],
         "summary": "Get Oauth Url",
         "description": "Get OAuth authorization URL for the specified provider.\n\nArgs:\n    provider: OAuth provider (google, apple)\n    redirect_uri: OAuth redirect URI\n    state: Optional state parameter for CSRF protection\n    platform: Optional platform specification ('ios', 'android', 'web')\n    auth_service: Authentication service\n\nReturns:\n    OAuth authorization URL\n\nRaises:\n    HTTPException: If provider is not supported",
-        "operationId": "get_oauth_url_api_v1_auth_oauth__provider__url_get",
+        "operationId": "getOAuthUrl",
         "parameters": [
           {
             "name": "provider",
@@ -897,7 +732,7 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "title": "Response Get Oauth Url Api V1 Auth Oauth  Provider  Url Get"
+                  "title": "Response Getoauthurl"
                 }
               }
             }
@@ -922,7 +757,7 @@
         ],
         "summary": "Get Platform Oauth Url",
         "description": "Get platform-specific OAuth authorization URL.\n\nArgs:\n    provider: OAuth provider (google, apple)\n    platform: Platform specification ('ios', 'android', 'web')\n    redirect_uri: OAuth redirect URI\n    state: Optional state parameter for CSRF protection\n    auth_service: Authentication service\n\nReturns:\n    Platform-specific OAuth authorization URL\n\nRaises:\n    HTTPException: If provider or platform is not supported",
-        "operationId": "get_platform_oauth_url_api_v1_auth_oauth__provider__url__platform__get",
+        "operationId": "getOAuthUrlForPlatform",
         "parameters": [
           {
             "name": "provider",
@@ -975,7 +810,7 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "title": "Response Get Platform Oauth Url Api V1 Auth Oauth  Provider  Url  Platform  Get"
+                  "title": "Response Getoauthurlforplatform"
                 }
               }
             }
@@ -1000,7 +835,7 @@
         ],
         "summary": "Get Oauth Provider Info",
         "description": "Get OAuth provider configuration information.\n\nArgs:\n    provider: OAuth provider name (google, apple)\n    auth_service: Authentication service\n\nReturns:\n    Provider configuration information\n\nRaises:\n    HTTPException: If provider is not supported",
-        "operationId": "get_oauth_provider_info_api_v1_auth_oauth__provider__info_get",
+        "operationId": "getOAuthProviderInfo",
         "parameters": [
           {
             "name": "provider",
@@ -1043,7 +878,7 @@
         ],
         "summary": "Oauth Callback",
         "description": "Handle OAuth callback from provider.\n\nArgs:\n    provider: OAuth provider (google, apple)\n    callback_data: OAuth callback data\n    auth_service: Authentication service\n\nReturns:\n    OAuth callback response\n\nRaises:\n    HTTPException: If callback handling fails",
-        "operationId": "oauth_callback_api_v1_auth_oauth__provider__callback_post",
+        "operationId": "handleOAuthCallback",
         "parameters": [
           {
             "name": "provider",
@@ -1072,7 +907,7 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "title": "Response Oauth Callback Api V1 Auth Oauth  Provider  Callback Post"
+                  "title": "Response Handleoauthcallback"
                 }
               }
             }
@@ -1097,7 +932,7 @@
         ],
         "summary": "Google Oauth Callback",
         "description": "Handle Google OAuth callback for web applications.\n\nThis endpoint is called by Google after the user authorizes the application.\nIt receives the authorization code and exchanges it for user information.\n\nArgs:\n    code: Authorization code from Google\n    state: Optional state parameter for CSRF protection\n    error: Optional error parameter if authorization failed\n    auth_service: Authentication service\n\nReturns:\n    OAuth callback response with user authentication result\n\nRaises:\n    HTTPException: If callback handling fails",
-        "operationId": "google_oauth_callback_api_v1_auth_oauth_google_callback_get",
+        "operationId": "handleGoogleOAuthCallback",
         "parameters": [
           {
             "name": "code",
@@ -1148,7 +983,89 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "title": "Response Google Oauth Callback Api V1 Auth Oauth Google Callback Get"
+                  "title": "Response Handlegoogleoauthcallback"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/register/email/verify": {
+      "post": {
+        "tags": [
+          "authentication"
+        ],
+        "summary": "Verify Email Registration Code",
+        "operationId": "verifyEmailRegistrationCode",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmailRegisterVerifyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VerificationTokenResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/register/email/set-password": {
+      "post": {
+        "tags": [
+          "authentication"
+        ],
+        "summary": "Set Password After Verification",
+        "operationId": "setPasswordAfterVerification",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmailSetPasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponse"
                 }
               }
             }
@@ -1173,7 +1090,7 @@
         ],
         "summary": "Auth Health",
         "description": "Authentication service health check.\n\nReturns:\n    Health status",
-        "operationId": "auth_health_api_v1_auth_health_get",
+        "operationId": "healthCheck",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -1181,7 +1098,7 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "title": "Response Auth Health Api V1 Auth Health Get"
+                  "title": "Response Healthcheck"
                 }
               }
             }
@@ -1196,7 +1113,7 @@
         ],
         "summary": "Get Google Oauth Detailed Info",
         "description": "Get detailed Google OAuth configuration information for mobile platforms.\n\nArgs:\n    auth_service: Authentication service\n\nReturns:\n    Detailed Google OAuth configuration information\n\nRaises:\n    HTTPException: If Google OAuth is not configured",
-        "operationId": "get_google_oauth_detailed_info_api_v1_auth_oauth_google_detailed_info_get",
+        "operationId": "getGoogleOAuthDetailedInfo",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -1204,7 +1121,7 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "title": "Response Get Google Oauth Detailed Info Api V1 Auth Oauth Google Detailed Info Get"
+                  "title": "Response Getgoogleoauthdetailedinfo"
                 }
               }
             }
@@ -1219,7 +1136,7 @@
         ],
         "summary": "Get My Profile",
         "description": "Retrieve the current authenticated user's profile information.\n            \n            This endpoint returns the complete profile data for the currently\n            authenticated user, including personal information, preferences,\n            and account status.\n            \n            **Authentication Required**: Valid JWT access token in Authorization header\n            **Rate Limiting**: 100 requests per minute",
-        "operationId": "getMyProfile",
+        "operationId": "get_my_profile_api_v1_users_me_get",
         "parameters": [
           {
             "name": "token",
@@ -1656,6 +1573,112 @@
         }
       }
     },
+    "/api/v1/matches/generate/random": {
+      "post": {
+        "tags": [
+          "matches"
+        ],
+        "summary": "Generate random matches",
+        "description": "Generate random matches for the current user using a simple random algorithm. This is a placeholder for the neural network matching system.",
+        "operationId": "generate_random_matches_api_v1_matches_generate_random_post",
+        "parameters": [
+          {
+            "name": "count",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 50,
+              "minimum": 1,
+              "description": "Number of matches to generate",
+              "default": 10,
+              "title": "Count"
+            },
+            "description": "Number of matches to generate"
+          },
+          {
+            "name": "min_similarity",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Minimum similarity score for generated matches",
+              "title": "Min Similarity"
+            },
+            "description": "Minimum similarity score for generated matches"
+          },
+          {
+            "name": "max_similarity",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Maximum similarity score for generated matches",
+              "title": "Max Similarity"
+            },
+            "description": "Maximum similarity score for generated matches"
+          },
+          {
+            "name": "token",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MatchGenerationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/matches/": {
       "get": {
         "tags": [
@@ -1776,6 +1799,83 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/MatchListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/matches/discover": {
+      "get": {
+        "tags": [
+          "matches"
+        ],
+        "summary": "Discover matches for endless scroll",
+        "description": "Get matches for discovery with endless scroll functionality. Returns up to 8 matches ordered from least to most relevant, filtered by minimum 60% similarity score.",
+        "operationId": "discover_matches_api_v1_matches_discover_get",
+        "parameters": [
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Number of matches to skip for pagination",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Number of matches to skip for pagination"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 8,
+              "minimum": 1,
+              "description": "Number of matches to return (max 8)",
+              "default": 8,
+              "title": "Limit"
+            },
+            "description": "Number of matches to return (max 8)"
+          },
+          {
+            "name": "token",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MatchDiscoveryResponse"
                 }
               }
             }
@@ -1960,7 +2060,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+
+                }
               }
             }
           },
@@ -2118,83 +2220,8 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/matches/discover": {
-      "get": {
-        "tags": [
-          "matches"
-        ],
-        "summary": "Discover matches for endless scroll",
-        "description": "Get matches for discovery with endless scroll functionality. Returns up to 8 matches ordered from least to most relevant, filtered by minimum 60% similarity score.",
-        "operationId": "discover_matches_api_v1_matches_discover_get",
-        "parameters": [
-          {
-            "name": "offset",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "minimum": 0,
-              "description": "Number of matches to skip for pagination",
-              "default": 0,
-              "title": "Offset"
-            },
-            "description": "Number of matches to skip for pagination"
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "maximum": 8,
-              "minimum": 1,
-              "description": "Number of matches to return (max 8)",
-              "default": 8,
-              "title": "Limit"
-            },
-            "description": "Number of matches to return (max 8)"
-          },
-          {
-            "name": "token",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Token"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MatchDiscoveryResponse"
+
                 }
               }
             }
@@ -2965,7 +2992,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+
+                }
               }
             }
           },
@@ -3292,6 +3321,228 @@
         }
       }
     },
+    "/api/v1/locations/suggestions": {
+      "get": {
+        "tags": [
+          "locations"
+        ],
+        "summary": "Get Location Suggestions",
+        "description": "Get location suggestions for autocomplete using Open-Meteo geocoding API.\n            \n            This endpoint provides location suggestions based on a search query,\n            useful for implementing autocomplete functionality in the frontend.\n            \n            **Rate Limiting**: 100 requests per minute",
+        "operationId": "get_location_suggestions_api_v1_locations_suggestions_get",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 100,
+              "description": "Search query for location",
+              "title": "Query"
+            },
+            "description": "Search query for location"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 20,
+              "minimum": 1,
+              "description": "Maximum number of suggestions to return",
+              "default": 5,
+              "title": "Limit"
+            },
+            "description": "Maximum number of suggestions to return"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of location suggestions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  },
+                  "title": "Response Get Location Suggestions Api V1 Locations Suggestions Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/locations/validate": {
+      "post": {
+        "tags": [
+          "locations"
+        ],
+        "summary": "Validate Location",
+        "description": "Validate a country and city combination using Open-Meteo geocoding API.\n             \n             This endpoint validates that a country and city combination exists and\n             matches together. Useful for verifying user input before saving to database.\n             \n             **Rate Limiting**: 50 requests per minute",
+        "operationId": "validate_location_api_v1_locations_validate_post",
+        "parameters": [
+          {
+            "name": "country",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 100,
+              "description": "Country name",
+              "title": "Country"
+            },
+            "description": "Country name"
+          },
+          {
+            "name": "city",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 100,
+              "description": "City name",
+              "title": "City"
+            },
+            "description": "City name"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Validation result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Validate Location Api V1 Locations Validate Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/locations/validate/country": {
+      "get": {
+        "tags": [
+          "locations"
+        ],
+        "summary": "Validate Country",
+        "description": "Validate that a country exists using Open-Meteo geocoding API.\n            \n            This endpoint validates that a country name exists and is valid.\n            \n            **Rate Limiting**: 100 requests per minute",
+        "operationId": "validate_country_api_v1_locations_validate_country_get",
+        "parameters": [
+          {
+            "name": "country",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 100,
+              "description": "Country name",
+              "title": "Country"
+            },
+            "description": "Country name"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Country validation result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Validate Country Api V1 Locations Validate Country Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/locations/validate/city": {
+      "get": {
+        "tags": [
+          "locations"
+        ],
+        "summary": "Validate City",
+        "description": "Validate that a city exists using Open-Meteo geocoding API.\n            \n            This endpoint validates that a city name exists and is valid.\n            \n            **Rate Limiting**: 100 requests per minute",
+        "operationId": "validate_city_api_v1_locations_validate_city_get",
+        "parameters": [
+          {
+            "name": "city",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 100,
+              "description": "City name",
+              "title": "City"
+            },
+            "description": "City name"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "City validation result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Validate City Api V1 Locations Validate City Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/admin/login": {
       "post": {
         "tags": [
@@ -3399,7 +3650,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+
+                }
               }
             }
           },
@@ -3507,7 +3760,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+
+                }
               }
             }
           },
@@ -3873,7 +4128,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+
+                }
               }
             }
           },
@@ -3940,7 +4197,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+
+                }
               }
             }
           },
@@ -4322,7 +4581,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+
+                }
               }
             }
           },
@@ -4389,7 +4650,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+
+                }
               }
             }
           },
@@ -4914,7 +5177,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+
+                }
               }
             }
           },
@@ -5175,7 +5440,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+
+                }
               }
             }
           },
@@ -5942,9 +6209,9 @@
           "id_token": {
             "type": "string",
             "title": "Id Token",
-            "description": "Apple ID token"
+            "description": "Firebase ID token from Apple sign-in"
           },
-          "authorization_code": {
+          "name": {
             "anyOf": [
               {
                 "type": "string"
@@ -5953,20 +6220,57 @@
                 "type": "null"
               }
             ],
-            "title": "Authorization Code",
-            "description": "Apple authorization code"
+            "title": "Name",
+            "description": "User name"
           },
-          "user": {
+          "birthday": {
             "anyOf": [
               {
-                "type": "object"
+                "type": "string",
+                "format": "date"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "User",
-            "description": "Apple user data"
+            "title": "Birthday",
+            "description": "User birthday (YYYY-MM-DD)"
+          },
+          "gender": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gender",
+            "description": "User gender"
+          },
+          "country": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country",
+            "description": "User country"
+          },
+          "city": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City",
+            "description": "User city"
           }
         },
         "type": "object",
@@ -5974,7 +6278,7 @@
           "id_token"
         ],
         "title": "AppleLoginRequest",
-        "description": "Apple OAuth login request schema."
+        "description": "Apple Firebase Authentication login request schema."
       },
       "AuthResponse": {
         "properties": {
@@ -6016,62 +6320,28 @@
         "title": "AuthResponse",
         "description": "Authentication response schema.\n\nStandard response format for all authentication endpoints. Provides consistent\nstructure for success/failure status, user-friendly messages, and optional\ntoken data for successful operations.\n\n**Response Structure:**\n- success: Boolean indicating if the operation succeeded\n- message: Human-readable message describing the result\n- data: Optional token data (only present for successful auth operations)\n\n**Usage:**\n- All auth endpoints return this consistent format\n- Check success field to determine operation result\n- Use message for user feedback\n- Access token data when success is true"
       },
-      "Body_login_oauth2_api_v1_auth_login_oauth2_post": {
+      "BasicMessageResponse": {
         "properties": {
-          "grant_type": {
-            "anyOf": [
-              {
-                "type": "string",
-                "pattern": "^password$"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Grant Type"
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "description": "Whether the operation succeeded",
+            "example": true
           },
-          "username": {
+          "message": {
             "type": "string",
-            "title": "Username"
-          },
-          "password": {
-            "type": "string",
-            "title": "Password"
-          },
-          "scope": {
-            "type": "string",
-            "title": "Scope",
-            "default": ""
-          },
-          "client_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Client Id"
-          },
-          "client_secret": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Client Secret"
+            "title": "Message",
+            "description": "Human-readable message",
+            "example": "Verification code sent to your email."
           }
         },
         "type": "object",
         "required": [
-          "username",
-          "password"
+          "success",
+          "message"
         ],
-        "title": "Body_login_oauth2_api_v1_auth_login_oauth2_post"
+        "title": "BasicMessageResponse",
+        "description": "Simple response schema without token data.\n\nUse for endpoints like registration initiation that should not expose\nany authentication tokens in responses."
       },
       "Body_upload_photo_api_v1_photos_upload_post": {
         "properties": {
@@ -6417,6 +6687,31 @@
         "title": "DeviceInfoResponse",
         "description": "Response for device detection."
       },
+      "EmailRegisterVerifyRequest": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email",
+            "description": "User email address"
+          },
+          "verification_code": {
+            "type": "string",
+            "maxLength": 6,
+            "minLength": 6,
+            "pattern": "^[0-9]{6}$",
+            "title": "Verification Code",
+            "description": "6-digit verification code"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "verification_code"
+        ],
+        "title": "EmailRegisterVerifyRequest",
+        "description": "Verify email registration code (no account creation)."
+      },
       "EmailRegistrationConfirm": {
         "properties": {
           "email": {
@@ -6431,26 +6726,12 @@
             "minLength": 6,
             "title": "Verification Code",
             "description": "Email verification code"
-          },
-          "password": {
-            "type": "string",
-            "minLength": 8,
-            "title": "Password",
-            "description": "User password"
-          },
-          "name": {
-            "type": "string",
-            "minLength": 1,
-            "title": "Name",
-            "description": "User name"
           }
         },
         "type": "object",
         "required": [
           "email",
-          "verification_code",
-          "password",
-          "name"
+          "verification_code"
         ],
         "title": "EmailRegistrationConfirm",
         "description": "Email registration confirmation schema (Step 2)."
@@ -6470,6 +6751,35 @@
         ],
         "title": "EmailRegistrationRequest",
         "description": "Email registration request schema (Step 1)."
+      },
+      "EmailSetPasswordRequest": {
+        "properties": {
+          "verification_token": {
+            "type": "string",
+            "title": "Verification Token",
+            "description": "One-time verification token"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8,
+            "title": "Password",
+            "description": "Account password"
+          },
+          "password_confirm": {
+            "type": "string",
+            "minLength": 8,
+            "title": "Password Confirm",
+            "description": "Confirmation password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "verification_token",
+          "password",
+          "password_confirm"
+        ],
+        "title": "EmailSetPasswordRequest",
+        "description": "Set password after verification (account creation)."
       },
       "EmailVerificationRequest": {
         "properties": {
@@ -6491,9 +6801,9 @@
           "id_token": {
             "type": "string",
             "title": "Id Token",
-            "description": "Google ID token"
+            "description": "Firebase ID token from Google sign-in"
           },
-          "access_token": {
+          "name": {
             "anyOf": [
               {
                 "type": "string"
@@ -6502,8 +6812,57 @@
                 "type": "null"
               }
             ],
-            "title": "Access Token",
-            "description": "Google access token"
+            "title": "Name",
+            "description": "User name"
+          },
+          "birthday": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Birthday",
+            "description": "User birthday (YYYY-MM-DD)"
+          },
+          "gender": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gender",
+            "description": "User gender"
+          },
+          "country": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country",
+            "description": "User country"
+          },
+          "city": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City",
+            "description": "User city"
           }
         },
         "type": "object",
@@ -6511,7 +6870,7 @@
           "id_token"
         ],
         "title": "GoogleLoginRequest",
-        "description": "Google OAuth login request schema."
+        "description": "Google Firebase Authentication login request schema."
       },
       "HTTPValidationError": {
         "properties": {
@@ -8547,6 +8906,11 @@
             "title": "Is Verified",
             "description": "Email verification status"
           },
+          "profile_completed": {
+            "type": "boolean",
+            "title": "Profile Completed",
+            "description": "Profile completion status"
+          },
           "created_at": {
             "type": "string",
             "format": "date-time",
@@ -8566,6 +8930,7 @@
           "name",
           "is_active",
           "is_verified",
+          "profile_completed",
           "created_at",
           "updated_at"
         ],
@@ -8604,6 +8969,19 @@
       },
       "UserUpdate": {
         "properties": {
+          "password": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 8
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Password",
+            "description": "User password"
+          },
           "name": {
             "anyOf": [
               {
@@ -8705,6 +9083,32 @@
         ],
         "title": "ValidationError"
       },
+      "VerificationTokenResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success"
+          },
+          "verification_token": {
+            "type": "string",
+            "title": "Verification Token",
+            "description": "One-time JWT for setting password"
+          },
+          "expires_in": {
+            "type": "integer",
+            "title": "Expires In",
+            "description": "Seconds until token expires"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "verification_token",
+          "expires_in"
+        ],
+        "title": "VerificationTokenResponse",
+        "description": "Response carrying one-time verification token to set password."
+      },
       "app__schemas__referral__SocialPlatformInfo": {
         "properties": {
           "platform": {
@@ -8799,6 +9203,23 @@
         "title": "SocialPlatformInfo",
         "description": "Information about a social media platform."
       }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Include access token: Authorization: Bearer \u003Ctoken\u003E"
+      }
     }
+  },
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "externalDocs": {
+    "description": "TwinFinder product site",
+    "url": "https://twinfinder.app"
   }
 }

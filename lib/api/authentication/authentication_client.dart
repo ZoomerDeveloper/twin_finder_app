@@ -6,10 +6,12 @@ import 'package:dio/dio.dart';
 import 'package:retrofit/retrofit.dart';
 
 import '../models/apple_login_request.dart';
-import '../models/auth_login_oauth2.dart';
 import '../models/auth_response.dart';
+import '../models/basic_message_response.dart';
+import '../models/email_register_verify_request.dart';
 import '../models/email_registration_confirm.dart';
 import '../models/email_registration_request.dart';
+import '../models/email_set_password_request.dart';
 import '../models/email_verification_request.dart';
 import '../models/google_login_request.dart';
 import '../models/login_request.dart';
@@ -23,6 +25,7 @@ import '../models/social_login_response.dart';
 import '../models/token_blacklist_request.dart';
 import '../models/token_blacklist_response.dart';
 import '../models/user_auth_info.dart';
+import '../models/verification_token_response.dart';
 
 part 'authentication_client.g.dart';
 
@@ -90,113 +93,9 @@ abstract class AuthenticationClient {
     @DioOptions() RequestOptions? options,
   });
 
-  /// Login Oauth2.
-  ///
-  /// OAuth2 compatible token endpoint.
-  ///
-  /// This endpoint provides OAuth2-compatible authentication for third-party.
-  /// applications and OAuth2 clients. It accepts form-encoded data instead of JSON.
-  ///
-  /// **OAuth2 Compatibility:**.
-  /// - Accepts standard OAuth2 password grant flow.
-  /// - Uses form-encoded data (application/x-www-form-urlencoded).
-  /// - Returns standard OAuth2 token response format.
-  /// - Compatible with OAuth2 libraries and tools.
-  ///
-  /// **Use Cases:**.
-  /// - Third-party application integration.
-  /// - OAuth2 client libraries.
-  /// - API testing tools that expect OAuth2 format.
-  ///
-  /// Args:.
-  ///     form_data: OAuth2PasswordRequestForm containing:.
-  ///         - username: User's email address.
-  ///         - password: User's password.
-  ///         - grant_type: Should be "password" for this endpoint.
-  ///     auth_service: Authentication service dependency.
-  ///    
-  /// Returns:.
-  ///     AuthResponse: Authentication response with JWT tokens.
-  ///    
-  /// Raises:.
-  ///     HTTPException (401): If username or password is incorrect.
-  ///     HTTPException (422): If form data validation fails.
-  ///    
-  /// Example Request (form-encoded):.
-  ///     ```.
-  ///     username=user@example.com&password=securepassword123&grant_type=password.
-  ///     ```.
-  ///    
-  /// Example Response:.
-  ///     ```json.
-  ///     {.
-  ///         "success": true,.
-  ///         "message": "Login successful",.
-  ///         "data": {.
-  ///             "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",.
-  ///             "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",.
-  ///             "token_type": "bearer",.
-  ///             "expires_in": 3600.
-  ///         }.
-  ///     }.
-  ///     ```.
-  @FormUrlEncoded()
-  @POST('/api/v1/auth/login/oauth2')
-  Future<AuthResponse> loginOauth2ApiV1AuthLoginOauth2Post({
-    @Body() required AuthLoginOauth2 body,
-    @Extras() Map<String, dynamic>? extras,
-    @DioOptions() RequestOptions? options,
-  });
-
-  /// Initiate Registration.
-  ///
-  /// Initiate email registration process (Step 1 of 2).
-  ///
-  /// This endpoint starts the two-step email registration process by sending.
-  /// a verification code to the provided email address.
-  ///
-  /// **Registration Flow:**.
-  /// 1. User provides email address.
-  /// 2. System validates email format and availability.
-  /// 3. Verification code is generated and sent via email.
-  /// 4. User receives code and proceeds to step 2.
-  ///
-  /// **Security Features:**.
-  /// - Email validation and availability check.
-  /// - Rate limiting on email sending.
-  /// - Verification codes expire after 15 minutes.
-  /// - Prevents duplicate registrations.
-  ///
-  /// Args:.
-  ///     registration_data: EmailRegistrationRequest containing:.
-  ///         - email: Valid email address for registration.
-  ///     auth_service: Authentication service dependency.
-  ///    
-  /// Returns:.
-  ///     AuthResponse: Response indicating verification code was sent.
-  ///    
-  /// Raises:.
-  ///     HTTPException (400): If email already exists.
-  ///     HTTPException (400): If registration already pending.
-  ///     HTTPException (422): If email format is invalid.
-  ///    
-  /// Example Request:.
-  ///     ```json.
-  ///     {.
-  ///         "email": "newuser@example.com".
-  ///     }.
-  ///     ```.
-  ///    
-  /// Example Response:.
-  ///     ```json.
-  ///     {.
-  ///         "success": true,.
-  ///         "message": "Verification code sent to your email. Please check your inbox and enter the code to complete registration.",.
-  ///         "data": null.
-  ///     }.
-  ///     ```.
-  @POST('/api/v1/auth/register/initiate')
-  Future<AuthResponse> initiateRegistrationApiV1AuthRegisterInitiatePost({
+  /// Initiate Registration
+  @POST('/api/v1/auth/register/email/initiate')
+  Future<BasicMessageResponse> initiateRegistration({
     @Body() required EmailRegistrationRequest body,
     @Extras() Map<String, dynamic>? extras,
     @DioOptions() RequestOptions? options,
@@ -207,27 +106,32 @@ abstract class AuthenticationClient {
   /// Confirm email registration and create user account (Step 2 of 2).
   ///
   /// This endpoint completes the registration process by verifying the email.
-  /// verification code and creating the user account with the provided details.
+  /// verification code and creating a basic user account. The user will need.
+  /// to complete their profile with additional information before accessing.
+  /// application features.
   ///
   /// **Registration Completion:**.
-  /// 1. User provides email, verification code, password, and name.
+  /// 1. User provides email and verification code.
   /// 2. System validates verification code and expiration.
-  /// 3. User account is created with hashed password.
+  /// 3. Basic user account is created (email verified).
   /// 4. JWT tokens are generated and returned.
-  /// 5. User is automatically logged in.
+  /// 5. User is automatically logged in but profile is incomplete.
+  ///
+  /// **Next Steps:**.
+  /// - User must complete profile via PUT /api/v1/users/me.
+  /// - Required fields: password, name, city, country, birth date, gender.
+  /// - Profile completion is required before accessing app features.
   ///
   /// **Security Features:**.
   /// - Verification code validation and expiration check.
-  /// - Password hashing using bcrypt.
   /// - Automatic account activation.
   /// - GDPR consent tracking.
+  /// - Profile completion tracking.
   ///
   /// Args:.
   ///     confirmation_data: EmailRegistrationConfirm containing:.
   ///         - email: Email address used in step 1.
   ///         - verification_code: 6-digit code sent via email.
-  ///         - password: User's chosen password (min 8 characters).
-  ///         - name: User's display name.
   ///     auth_service: Authentication service dependency.
   ///    
   /// Returns:.
@@ -243,9 +147,7 @@ abstract class AuthenticationClient {
   ///     ```json.
   ///     {.
   ///         "email": "newuser@example.com",.
-  ///         "verification_code": "123456",.
-  ///         "password": "securepassword123",.
-  ///         "name": "John Doe".
+  ///         "verification_code": "123456".
   ///     }.
   ///     ```.
   ///    
@@ -253,7 +155,7 @@ abstract class AuthenticationClient {
   ///     ```json.
   ///     {.
   ///         "success": true,.
-  ///         "message": "Registration completed successfully! Welcome to TwinFinder.",.
+  ///         "message": "Registration completed successfully! Please complete your profile.",.
   ///         "data": {.
   ///             "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",.
   ///             "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",.
@@ -263,71 +165,8 @@ abstract class AuthenticationClient {
   ///     }.
   ///     ```.
   @POST('/api/v1/auth/register/confirm')
-  Future<AuthResponse> confirmRegistrationApiV1AuthRegisterConfirmPost({
+  Future<AuthResponse> confirmRegistration({
     @Body() required EmailRegistrationConfirm body,
-    @Extras() Map<String, dynamic>? extras,
-    @DioOptions() RequestOptions? options,
-  });
-
-  /// Register.
-  ///
-  /// Register a new user account (Legacy endpoint - deprecated).
-  ///
-  /// **⚠️ DEPRECATED: Use /register/initiate and /register/confirm instead**.
-  ///
-  /// This legacy endpoint creates a user account directly without email verification.
-  /// It's maintained for backward compatibility but should not be used in new applications.
-  ///
-  /// **Security Considerations:**.
-  /// - No email verification required.
-  /// - Account is created immediately.
-  /// - Less secure than the two-step registration process.
-  /// - Email verification token is generated but not required for login.
-  ///
-  /// **Migration Path:**.
-  /// - New applications should use /register/initiate and /register/confirm.
-  /// - This endpoint will be removed in a future version.
-  ///
-  /// Args:.
-  ///     email: User's email address (must be unique).
-  ///     password: User's password (minimum 8 characters).
-  ///     name: User's display name.
-  ///     auth_service: Authentication service dependency.
-  ///    
-  /// Returns:.
-  ///     AuthResponse: Authentication response with JWT tokens.
-  ///    
-  /// Raises:.
-  ///     HTTPException (400): If email already exists.
-  ///     HTTPException (422): If request data validation fails.
-  ///    
-  /// Example Request:.
-  ///     ```json.
-  ///     {.
-  ///         "email": "user@example.com",.
-  ///         "password": "securepassword123",.
-  ///         "name": "John Doe".
-  ///     }.
-  ///     ```.
-  ///    
-  /// Example Response:.
-  ///     ```json.
-  ///     {.
-  ///         "success": true,.
-  ///         "message": "Registration successful. Please verify your email.",.
-  ///         "data": {.
-  ///             "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",.
-  ///             "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",.
-  ///             "token_type": "bearer",.
-  ///             "expires_in": 3600.
-  ///         }.
-  ///     }.
-  ///     ```.
-  @POST('/api/v1/auth/register')
-  Future<AuthResponse> registerApiV1AuthRegisterPost({
-    @Query('email') required String email,
-    @Query('password') required String password,
-    @Query('name') required String name,
     @Extras() Map<String, dynamic>? extras,
     @DioOptions() RequestOptions? options,
   });
@@ -467,7 +306,7 @@ abstract class AuthenticationClient {
   /// Returns:.
   ///     User authentication information.
   @GET('/api/v1/auth/me')
-  Future<UserAuthInfo> getCurrentUserInfoApiV1AuthMeGet({
+  Future<UserAuthInfo> getMyProfile({
     @Query('token') String? token,
     @Extras() Map<String, dynamic>? extras,
     @DioOptions() RequestOptions? options,
@@ -484,7 +323,7 @@ abstract class AuthenticationClient {
   /// Returns:.
   ///     Authentication response.
   @POST('/api/v1/auth/forgot-password')
-  Future<AuthResponse> forgotPasswordApiV1AuthForgotPasswordPost({
+  Future<AuthResponse> forgotPassword({
     @Body() required PasswordResetRequest body,
     @Extras() Map<String, dynamic>? extras,
     @DioOptions() RequestOptions? options,
@@ -504,7 +343,7 @@ abstract class AuthenticationClient {
   /// Raises:.
   ///     HTTPException: If token is invalid or expired.
   @POST('/api/v1/auth/reset-password')
-  Future<AuthResponse> resetPasswordApiV1AuthResetPasswordPost({
+  Future<AuthResponse> resetPassword({
     @Body() required PasswordResetConfirm body,
     @Extras() Map<String, dynamic>? extras,
     @DioOptions() RequestOptions? options,
@@ -524,7 +363,7 @@ abstract class AuthenticationClient {
   /// Raises:.
   ///     HTTPException: If token is invalid or expired.
   @POST('/api/v1/auth/verify-email')
-  Future<AuthResponse> verifyEmailApiV1AuthVerifyEmailPost({
+  Future<AuthResponse> verifyEmail({
     @Body() required EmailVerificationRequest body,
     @Extras() Map<String, dynamic>? extras,
     @DioOptions() RequestOptions? options,
@@ -546,7 +385,7 @@ abstract class AuthenticationClient {
   /// Raises:.
   ///     HTTPException: If current password is incorrect.
   @POST('/api/v1/auth/change-password')
-  Future<AuthResponse> changePasswordApiV1AuthChangePasswordPost({
+  Future<AuthResponse> changePassword({
     @Query('current_password') required String currentPassword,
     @Query('new_password') required String newPassword,
     @Query('token') String? token,
@@ -565,7 +404,7 @@ abstract class AuthenticationClient {
   /// Returns:.
   ///     Token blacklist response.
   @POST('/api/v1/auth/blacklist-token')
-  Future<TokenBlacklistResponse> blacklistTokenApiV1AuthBlacklistTokenPost({
+  Future<TokenBlacklistResponse> blacklistToken({
     @Body() required TokenBlacklistRequest body,
     @Extras() Map<String, dynamic>? extras,
     @DioOptions() RequestOptions? options,
@@ -573,13 +412,13 @@ abstract class AuthenticationClient {
 
   /// Login Google.
   ///
-  /// Authenticate user with Google OAuth (Mobile Flow).
+  /// Authenticate user with Firebase Google Authentication.
   ///
-  /// This endpoint is designed for mobile applications that use Google Sign-In SDK.
-  /// and receive ID tokens directly from the mobile app.
+  /// This endpoint is designed for mobile applications that use Firebase Authentication.
+  /// and receive Firebase ID tokens from Google sign-in.
   ///
   /// Args:.
-  ///     login_data: Google login request data with ID token.
+  ///     login_data: Google login request data with Firebase ID token only.
   ///     auth_service: Authentication service.
   ///
   /// Returns:.
@@ -588,43 +427,21 @@ abstract class AuthenticationClient {
   /// Raises:.
   ///     HTTPException: If Google authentication fails.
   @POST('/api/v1/auth/login/google')
-  Future<SocialLoginResponse> loginGoogleApiV1AuthLoginGooglePost({
+  Future<SocialLoginResponse> loginWithGoogle({
     @Body() required GoogleLoginRequest body,
-    @Extras() Map<String, dynamic>? extras,
-    @DioOptions() RequestOptions? options,
-  });
-
-  /// Login Google Web.
-  ///
-  /// Authenticate user with Google OAuth (Web Flow).
-  ///
-  /// This endpoint is designed for web applications that use OAuth2 authorization code flow.
-  /// The frontend redirects users to Google OAuth, gets an authorization code, and sends it here.
-  ///
-  /// Args:.
-  ///     code: Authorization code from Google OAuth.
-  ///     state: Optional state parameter for CSRF protection.
-  ///     auth_service: Authentication service.
-  ///
-  /// Returns:.
-  ///     Social login response with tokens and user info.
-  ///
-  /// Raises:.
-  ///     HTTPException: If Google authentication fails.
-  @GET('/api/v1/auth/login/google/web')
-  Future<SocialLoginResponse> loginGoogleWebApiV1AuthLoginGoogleWebGet({
-    @Query('code') required String code,
-    @Query('state') String? state,
     @Extras() Map<String, dynamic>? extras,
     @DioOptions() RequestOptions? options,
   });
 
   /// Login Apple.
   ///
-  /// Authenticate user with Apple OAuth.
+  /// Authenticate user with Firebase Apple Authentication.
+  ///
+  /// This endpoint is designed for mobile applications that use Firebase Authentication.
+  /// and receive Firebase ID tokens from Apple sign-in.
   ///
   /// Args:.
-  ///     login_data: Apple login request data.
+  ///     login_data: Apple login request data with Firebase ID token only.
   ///     auth_service: Authentication service.
   ///
   /// Returns:.
@@ -633,7 +450,7 @@ abstract class AuthenticationClient {
   /// Raises:.
   ///     HTTPException: If Apple authentication fails.
   @POST('/api/v1/auth/login/apple')
-  Future<SocialLoginResponse> loginAppleApiV1AuthLoginApplePost({
+  Future<SocialLoginResponse> loginWithApple({
     @Body() required AppleLoginRequest body,
     @Extras() Map<String, dynamic>? extras,
     @DioOptions() RequestOptions? options,
@@ -656,7 +473,7 @@ abstract class AuthenticationClient {
   /// Raises:.
   ///     HTTPException: If provider is not supported.
   @GET('/api/v1/auth/oauth/{provider}/url')
-  Future<dynamic> getOauthUrlApiV1AuthOauthProviderUrlGet({
+  Future<dynamic> getOAuthUrl({
     @Path('provider') required String provider,
     @Query('redirect_uri') required String redirectUri,
     @Query('state') String? state,
@@ -682,7 +499,7 @@ abstract class AuthenticationClient {
   /// Raises:.
   ///     HTTPException: If provider or platform is not supported.
   @GET('/api/v1/auth/oauth/{provider}/url/{platform}')
-  Future<dynamic> getPlatformOauthUrlApiV1AuthOauthProviderUrlPlatformGet({
+  Future<dynamic> getOAuthUrlForPlatform({
     @Path('provider') required String provider,
     @Path('platform') required String platform,
     @Query('redirect_uri') required String redirectUri,
@@ -705,7 +522,7 @@ abstract class AuthenticationClient {
   /// Raises:.
   ///     HTTPException: If provider is not supported.
   @GET('/api/v1/auth/oauth/{provider}/info')
-  Future<OAuthProviderInfo> getOauthProviderInfoApiV1AuthOauthProviderInfoGet({
+  Future<OAuthProviderInfo> getOAuthProviderInfo({
     @Path('provider') required String provider,
     @Extras() Map<String, dynamic>? extras,
     @DioOptions() RequestOptions? options,
@@ -726,7 +543,7 @@ abstract class AuthenticationClient {
   /// Raises:.
   ///     HTTPException: If callback handling fails.
   @POST('/api/v1/auth/oauth/{provider}/callback')
-  Future<dynamic> oauthCallbackApiV1AuthOauthProviderCallbackPost({
+  Future<dynamic> handleOAuthCallback({
     @Path('provider') required String provider,
     @Body() required OAuthCallbackRequest body,
     @Extras() Map<String, dynamic>? extras,
@@ -752,10 +569,26 @@ abstract class AuthenticationClient {
   /// Raises:.
   ///     HTTPException: If callback handling fails.
   @GET('/api/v1/auth/oauth/google/callback')
-  Future<dynamic> googleOauthCallbackApiV1AuthOauthGoogleCallbackGet({
+  Future<dynamic> handleGoogleOAuthCallback({
     @Query('code') required String code,
     @Query('state') String? state,
     @Query('error') String? error,
+    @Extras() Map<String, dynamic>? extras,
+    @DioOptions() RequestOptions? options,
+  });
+
+  /// Verify Email Registration Code
+  @POST('/api/v1/auth/register/email/verify')
+  Future<VerificationTokenResponse> verifyEmailRegistrationCode({
+    @Body() required EmailRegisterVerifyRequest body,
+    @Extras() Map<String, dynamic>? extras,
+    @DioOptions() RequestOptions? options,
+  });
+
+  /// Set Password After Verification
+  @POST('/api/v1/auth/register/email/set-password')
+  Future<AuthResponse> setPasswordAfterVerification({
+    @Body() required EmailSetPasswordRequest body,
     @Extras() Map<String, dynamic>? extras,
     @DioOptions() RequestOptions? options,
   });
@@ -767,7 +600,7 @@ abstract class AuthenticationClient {
   /// Returns:.
   ///     Health status.
   @GET('/api/v1/auth/health')
-  Future<dynamic> authHealthApiV1AuthHealthGet({
+  Future<dynamic> healthCheck({
     @Extras() Map<String, dynamic>? extras,
     @DioOptions() RequestOptions? options,
   });
@@ -785,7 +618,7 @@ abstract class AuthenticationClient {
   /// Raises:.
   ///     HTTPException: If Google OAuth is not configured.
   @GET('/api/v1/auth/oauth/google/detailed-info')
-  Future<dynamic> getGoogleOauthDetailedInfoApiV1AuthOauthGoogleDetailedInfoGet({
+  Future<dynamic> getGoogleOAuthDetailedInfo({
     @Extras() Map<String, dynamic>? extras,
     @DioOptions() RequestOptions? options,
   });

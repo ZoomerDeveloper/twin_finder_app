@@ -27,6 +27,14 @@ final class AuthEmailCodeSent extends AuthState {
   List<Object?> get props => [email];
 }
 
+final class AuthEmailVerified extends AuthState {
+  final String email;
+  final String verificationToken;
+  AuthEmailVerified({required this.email, required this.verificationToken});
+  @override
+  List<Object?> get props => [email, verificationToken];
+}
+
 final class AuthFailure extends AuthState {
   final dynamic message;
   AuthFailure(this.message);
@@ -52,3 +60,12 @@ final class AuthProfileUpdateFailed extends AuthState {
   @override
   List<Object?> get props => [message, fieldName];
 }
+
+final class AuthPhotoUploaded extends AuthState {
+  final PhotoUploadResponse response;
+  AuthPhotoUploaded(this.response);
+  @override
+  List<Object?> get props => [response];
+}
+
+final class AuthMaintenance extends AuthState {}

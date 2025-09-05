@@ -20,101 +20,99 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> {
   int _currentIndex = 1;
 
-  final List<Widget> _pages = [
+  List<Widget> get _pages => [
     const ProfilePage(),
-    const TwinFinderPage(),
+    BlocProvider(
+      create: (context) => MatchesCubit(MatchesRepository(sl<Dio>())),
+      child: const TwinFinderPage(),
+    ),
     const ChatPage(),
   ];
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => MatchesCubit(
-        MatchesRepository(sl<Dio>()), // Dio получаем напрямую из DI
-      ),
-      child: Scaffold(
-        body: _pages[_currentIndex],
-        bottomNavigationBar: Container(
-          height: 120,
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            border: Border(top: BorderSide(color: Color(0xFFEFF2FC), width: 1)),
+    return Scaffold(
+      body: _pages[_currentIndex],
+      bottomNavigationBar: Container(
+        height: 120,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          border: Border(top: BorderSide(color: Color(0xFFEFF2FC), width: 1)),
+        ),
+        child: Theme(
+          data: Theme.of(context).copyWith(
+            splashColor: Colors.transparent,
+            highlightColor: Colors.transparent,
           ),
-          child: Theme(
-            data: Theme.of(context).copyWith(
-              splashColor: Colors.transparent,
-              highlightColor: Colors.transparent,
-            ),
-            child: BottomNavigationBar(
-              currentIndex: _currentIndex,
-              onTap: (index) {
-                setState(() {
-                  _currentIndex = index;
-                });
-              },
-              type: BottomNavigationBarType.fixed,
-              backgroundColor: const Color(0xFFEFF2FC),
-              selectedItemColor: Colors.black,
-              unselectedItemColor: const Color(0xFFA1A5AC),
-              elevation: 0,
-              enableFeedback: false,
-              showSelectedLabels: false,
-              showUnselectedLabels: false,
-              selectedFontSize: 0,
-              unselectedFontSize: 0,
-              iconSize: 0,
-              items: [
-                BottomNavigationBarItem(
-                  icon: SvgPicture.asset(
-                    AppIcons.profile,
-                    height: 40,
-                    width: 40,
-                    colorFilter: const ColorFilter.mode(
-                      Color(0xFFA1A5AC),
-                      BlendMode.srcIn,
-                    ),
+          child: BottomNavigationBar(
+            currentIndex: _currentIndex,
+            onTap: (index) {
+              setState(() {
+                _currentIndex = index;
+              });
+            },
+            type: BottomNavigationBarType.fixed,
+            backgroundColor: const Color(0xFFEFF2FC),
+            selectedItemColor: Colors.black,
+            unselectedItemColor: const Color(0xFFA1A5AC),
+            elevation: 0,
+            enableFeedback: false,
+            showSelectedLabels: false,
+            showUnselectedLabels: false,
+            selectedFontSize: 0,
+            unselectedFontSize: 0,
+            iconSize: 0,
+            items: [
+              BottomNavigationBarItem(
+                icon: SvgPicture.asset(
+                  AppIcons.profile,
+                  height: 40,
+                  width: 40,
+                  colorFilter: const ColorFilter.mode(
+                    Color(0xFFA1A5AC),
+                    BlendMode.srcIn,
                   ),
-                  activeIcon: SvgPicture.asset(
-                    AppIcons.profile,
-                    height: 40,
-                    width: 40,
-                    colorFilter: const ColorFilter.mode(
-                      Colors.black,
-                      BlendMode.srcIn,
-                    ),
-                  ),
-                  label: '',
-                  backgroundColor: Colors.transparent,
                 ),
-                BottomNavigationBarItem(
-                  icon: SvgPicture.asset(
-                    AppIcons.swipes,
-                    height: 40,
-                    width: 40,
-                    colorFilter: const ColorFilter.mode(
-                      Color(0xFFA1A5AC),
-                      BlendMode.srcIn,
-                    ),
+                activeIcon: SvgPicture.asset(
+                  AppIcons.profile,
+                  height: 40,
+                  width: 40,
+                  colorFilter: const ColorFilter.mode(
+                    Colors.black,
+                    BlendMode.srcIn,
                   ),
-                  activeIcon: SvgPicture.asset(
-                    AppIcons.swipes,
-                    height: 40,
-                    width: 40,
-                    colorFilter: const ColorFilter.mode(
-                      Colors.black,
-                      BlendMode.srcIn,
-                    ),
+                ),
+                label: '',
+                backgroundColor: Colors.transparent,
+              ),
+              BottomNavigationBarItem(
+                icon: SvgPicture.asset(
+                  AppIcons.swipes,
+                  height: 40,
+                  width: 40,
+                  colorFilter: const ColorFilter.mode(
+                    Color(0xFFA1A5AC),
+                    BlendMode.srcIn,
                   ),
-                  label: '',
-                  backgroundColor: Colors.transparent,
                 ),
-                BottomNavigationBarItem(
-                  icon: SvgPicture.asset(AppIcons.chat, height: 56),
-                  label: '',
-                  backgroundColor: Colors.transparent,
+                activeIcon: SvgPicture.asset(
+                  AppIcons.swipes,
+                  height: 40,
+                  width: 40,
+                  colorFilter: const ColorFilter.mode(
+                    Colors.black,
+                    BlendMode.srcIn,
+                  ),
                 ),
-              ],
-            ),
+                label: '',
+                backgroundColor: Colors.transparent,
+              ),
+              BottomNavigationBarItem(
+                icon: SvgPicture.asset(AppIcons.chat, height: 56),
+                label: '',
+                backgroundColor: Colors.transparent,
+              ),
+            ],
           ),
         ),
       ),

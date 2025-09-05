@@ -7,6 +7,7 @@ import 'package:twin_finder/features/auth/presentation/widgets/email_code_page.d
 import 'package:twin_finder/features/auth/presentation/widgets/email_enter_page.dart';
 import 'package:twin_finder/features/auth/presentation/widgets/email_login_page.dart';
 import 'package:twin_finder/features/auth/presentation/widgets/email_signup_page.dart';
+import 'package:twin_finder/features/auth/presentation/widgets/password_setup_page.dart';
 import 'package:twin_finder/features/auth/presentation/widgets/face_capture_page.dart';
 import 'package:twin_finder/features/auth/presentation/widgets/gender_page.dart';
 import 'package:twin_finder/features/auth/presentation/widgets/info_page.dart';
@@ -16,6 +17,7 @@ import 'package:twin_finder/features/main/presentation/pages/main_page.dart';
 import 'package:twin_finder/features/splash/presentation/pages/splash_screen.dart';
 import 'package:twin_finder/api/models/user_profile_response.dart';
 import 'package:twin_finder/features/main/presentation/pages/change_profile_details_page.dart';
+import 'package:twin_finder/features/maintenance/presentation/pages/maintenance_page.dart';
 
 class AppRouter {
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
@@ -81,6 +83,17 @@ class AppRouter {
             ),
           ),
         );
+      case AppRoutes.passwordSetup:
+        return _buildRoute(
+          settings,
+          PasswordSetupPage(
+            email: _extractEmailFromPasswordSetupArguments(settings.arguments),
+            verificationToken:
+                _extractVerificationTokenFromPasswordSetupArguments(
+                  settings.arguments,
+                ),
+          ),
+        );
       case AppRoutes.home:
         return _buildRoute(
           settings,
@@ -90,6 +103,8 @@ class AppRouter {
         return _buildRoute(settings, const MainPage());
       case AppRoutes.changeProfileDetails:
         return _buildRoute(settings, const ChangeProfileDetailsPage());
+      case AppRoutes.maintenance:
+        return _buildRoute(settings, const MaintenancePage());
       default:
         return _buildRoute(settings, const AuthPage());
     }
@@ -127,6 +142,22 @@ class AppRouter {
       return arguments[3] as int? ?? 60;
     }
     return 60;
+  }
+
+  static String _extractEmailFromPasswordSetupArguments(dynamic arguments) {
+    if (arguments is Map<String, dynamic>) {
+      return arguments['email'] as String? ?? '';
+    }
+    return '';
+  }
+
+  static String _extractVerificationTokenFromPasswordSetupArguments(
+    dynamic arguments,
+  ) {
+    if (arguments is Map<String, dynamic>) {
+      return arguments['verificationToken'] as String? ?? '';
+    }
+    return '';
   }
 }
 

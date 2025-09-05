@@ -6,23 +6,38 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'google_login_request.g.dart';
 
-/// Google OAuth login request schema.
+/// Google Firebase Authentication login request schema.
 @JsonSerializable()
 class GoogleLoginRequest {
   const GoogleLoginRequest({
     required this.idToken,
-    this.accessToken,
+    this.name,
+    this.birthday,
+    this.gender,
+    this.country,
+    this.city,
   });
   
   factory GoogleLoginRequest.fromJson(Map<String, Object?> json) => _$GoogleLoginRequestFromJson(json);
   
-  /// Google ID token
+  /// Firebase ID token from Google sign-in
   @JsonKey(name: 'id_token')
   final String idToken;
 
-  /// Google access token
-  @JsonKey(name: 'access_token')
-  final String? accessToken;
+  /// User name
+  final String? name;
+
+  /// User birthday (YYYY-MM-DD)
+  final DateTime? birthday;
+
+  /// User gender
+  final String? gender;
+
+  /// User country
+  final String? country;
+
+  /// User city
+  final String? city;
 
   Map<String, Object?> toJson() => _$GoogleLoginRequestToJson(this);
 }

@@ -3,6 +3,8 @@ import 'package:toastification/toastification.dart';
 import 'package:dio/dio.dart';
 import 'package:twin_finder/core/errors/api_error.dart';
 import 'package:twin_finder/core/utils/app_colors.dart';
+import 'package:twin_finder/core/router/app_routes.dart';
+import 'package:twin_finder/core/router/navigation.dart';
 
 class ErrorHandler {
   static void showError(BuildContext context, dynamic error, {String? title}) {
@@ -19,6 +21,19 @@ class ErrorHandler {
       // Специальная обработка для DioException
       message = _extractErrorMessage(error);
     }
+
+    // Специальная обработка для ошибок технических работ
+    print('🔧 Checking for maintenance error...');
+    if (isMaintenanceError(error)) {
+      print('🔧 Maintenance error detected! Showing maintenance page...');
+      customTitle = 'Maintenance';
+      message = 'Server is under maintenance. Please try again later.';
+      type = ToastificationType.warning;
+      // Показываем страницу технических работ вместо toast
+      _showMaintenancePage(context);
+      return;
+    }
+    print('🔧 No maintenance error, showing regular error toast');
 
     // Специальная обработка для ошибок подключения
     if (_isConnectionError(error)) {
@@ -215,6 +230,57 @@ class ErrorHandler {
         error.toString().toLowerCase().contains('internal');
   }
 
+  static bool isMaintenanceError(dynamic error) {
+    if (error is DioException) {
+      final response = error.response;
+      print('🔧 Maintenance check - DioException type: ${error.type}');
+      print('🔧 Maintenance check - Response: ${response?.statusCode}');
+
+      if (response != null) {
+        // 502 Bad Gateway - сервер недоступен
+        if (response.statusCode == 502) {
+          print('🔧 Maintenance detected: 502 Bad Gateway');
+          return true;
+        }
+        // 503 Service Unavailable - сервис недоступен
+        if (response.statusCode == 503) {
+          print('🔧 Maintenance detected: 503 Service Unavailable');
+          return true;
+        }
+        // 504 Gateway Timeout - таймаут шлюза
+        if (response.statusCode == 504) {
+          print('🔧 Maintenance detected: 504 Gateway Timeout');
+          return true;
+        }
+      }
+      // Отсутствие ответа от сервера или ошибки подключения
+      if (response == null) {
+        if (error.type == DioExceptionType.connectionTimeout ||
+            error.type == DioExceptionType.receiveTimeout ||
+            error.type == DioExceptionType.connectionError ||
+            error.type == DioExceptionType.sendTimeout) {
+          print(
+            '🔧 Maintenance detected: Connection error type: ${error.type}',
+          );
+          return true;
+        }
+      }
+    }
+
+    // Дополнительная проверка для строковых ошибок
+    final errorString = error.toString().toLowerCase();
+    print('🔧 Maintenance check - Error string: $errorString');
+    if (errorString.contains('connection refused') ||
+        errorString.contains('socketexception') ||
+        errorString.contains('connection error')) {
+      print('🔧 Maintenance detected: String contains connection error');
+      return true;
+    }
+
+    print('🔧 Maintenance check - No maintenance error detected');
+    return false;
+  }
+
   static bool _isConnectionError(dynamic error) {
     final errorString = error.toString().toLowerCase();
 
@@ -278,5 +344,10 @@ class ErrorHandler {
 
     // Для других типов ошибок
     return error.toString();
+  }
+
+  static void _showMaintenancePage(BuildContext context) {
+    // Навигация к странице технических работ
+    context.onlyAnimatedRoute(AppRoutes.maintenance);
   }
 }

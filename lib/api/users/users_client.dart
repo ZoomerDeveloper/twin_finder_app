@@ -25,7 +25,7 @@ abstract class UsersClient {
   ///             **Authentication Required**: Valid JWT access token in Authorization header.
   ///             **Rate Limiting**: 100 requests per minute.
   @GET('/api/v1/users/me')
-  Future<UserProfileResponse> getMyProfile({
+  Future<UserProfileResponse> getMyProfileApiV1UsersMeGet({
     @Query('token') String? token,
     @Extras() Map<String, dynamic>? extras,
     @DioOptions() RequestOptions? options,

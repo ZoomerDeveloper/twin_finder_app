@@ -84,6 +84,12 @@ class LocalizationStrings {
     'try_again': 'Try again',
     'something_went_wrong': 'Something went wrong',
 
+    // Maintenance page
+    'maintenance_title': 'Technical Works',
+    'maintenance_description':
+        'We are currently performing technical maintenance. Please try again later.',
+    'maintenance_retry': 'Try Again',
+
     // Success
     'success': 'Success',
     'profile_saved': 'Profile saved successfully',
@@ -120,6 +126,12 @@ class LocalizationStrings {
     'weak_password': 'Password is too weak',
     'enter_email_and_password': 'Enter your email and password to sign in.',
 
+    // Input placeholders (English)
+    'email_placeholder': 'Enter your email',
+    'password_placeholder': 'Enter your password',
+    'confirm_password_placeholder': 'Confirm your password',
+    'verification_code_placeholder': 'Enter verification code',
+
     // Profile setup pages
     'what_is_your_name': 'What is your name?',
     'this_will_appear_on_your_profile':
@@ -131,7 +143,7 @@ class LocalizationStrings {
     'location': 'Location',
     'your_age': 'Your Age',
     'your_gender': 'Your Gender',
-    'when_were_you_born': 'When were you born?',
+    'when_were_you_born': 'When\'s your birthday?',
     'what_is_your_gender': 'What is your gender?',
     'where_are_you_from': 'Where are you from?',
     'select_country_first': 'Select country first',
@@ -259,6 +271,12 @@ class LocalizationStrings {
     'try_again': 'Intentar de nuevo',
     'something_went_wrong': 'Algo salió mal',
 
+    // Maintenance page
+    'maintenance_title': 'Trabajos Técnicos',
+    'maintenance_description':
+        'Actualmente estamos realizando mantenimiento técnico. Por favor, inténtalo más tarde.',
+    'maintenance_retry': 'Intentar de Nuevo',
+
     // Success
     'success': 'Éxito',
     'profile_saved': 'Perfil guardado exitosamente',
@@ -296,6 +314,12 @@ class LocalizationStrings {
     'weak_password': 'La contraseña es muy débil',
     'enter_email_and_password':
         'Ingresa tu email y contraseña para iniciar sesión.',
+
+    // Input placeholders (Spanish)
+    'email_placeholder': 'Ingresa tu email',
+    'password_placeholder': 'Ingresa tu contraseña',
+    'confirm_password_placeholder': 'Confirma tu contraseña',
+    'verification_code_placeholder': 'Ingresa código de verificación',
 
     // Profile setup pages
     'what_is_your_name': '¿Cuál es tu nombre?',
@@ -435,6 +459,11 @@ class LocalizationStrings {
     'network_error': '网络错误',
     'try_again': '重试',
     'something_went_wrong': '出现错误',
+
+    // Maintenance page
+    'maintenance_title': '技术维护',
+    'maintenance_description': '我们正在进行技术维护。请稍后再试。',
+    'maintenance_retry': '重试',
 
     // Success
     'success': '成功',
@@ -607,6 +636,12 @@ class LocalizationStrings {
     'network_error': 'Ошибка сети',
     'try_again': 'Попробовать снова',
     'something_went_wrong': 'Что-то пошло не так',
+
+    // Maintenance page
+    'maintenance_title': 'Технические работы',
+    'maintenance_description':
+        'В настоящее время проводятся технические работы. Пожалуйста, попробуйте позже.',
+    'maintenance_retry': 'Попробовать снова',
 
     // Success
     'success': 'Успех',

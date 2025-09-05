@@ -30,6 +30,25 @@ abstract class MatchesClient {
     @DioOptions() RequestOptions? options,
   });
 
+  /// Generate random matches.
+  ///
+  /// Generate random matches for the current user using a simple random algorithm. This is a placeholder for the neural network matching system.
+  ///
+  /// [count] - Number of matches to generate.
+  ///
+  /// [minSimilarity] - Minimum similarity score for generated matches.
+  ///
+  /// [maxSimilarity] - Maximum similarity score for generated matches.
+  @POST('/api/v1/matches/generate/random')
+  Future<MatchGenerationResponse> generateRandomMatchesApiV1MatchesGenerateRandomPost({
+    @Query('min_similarity') dynamic minSimilarity,
+    @Query('max_similarity') dynamic maxSimilarity,
+    @Query('token') String? token,
+    @Query('count') int? count = 10,
+    @Extras() Map<String, dynamic>? extras,
+    @DioOptions() RequestOptions? options,
+  });
+
   /// Get user matches.
   ///
   /// Get paginated list of matches for the current user with optional filtering.
@@ -51,6 +70,22 @@ abstract class MatchesClient {
     @Query('token') String? token,
     @Query('page') int? page = 1,
     @Query('per_page') int? perPage = 20,
+    @Extras() Map<String, dynamic>? extras,
+    @DioOptions() RequestOptions? options,
+  });
+
+  /// Discover matches for endless scroll.
+  ///
+  /// Get matches for discovery with endless scroll functionality. Returns up to 8 matches ordered from least to most relevant, filtered by minimum 60% similarity score.
+  ///
+  /// [offset] - Number of matches to skip for pagination.
+  ///
+  /// [limit] - Number of matches to return (max 8).
+  @GET('/api/v1/matches/discover')
+  Future<MatchDiscoveryResponse> discoverMatchesApiV1MatchesDiscoverGet({
+    @Query('token') String? token,
+    @Query('offset') int? offset = 0,
+    @Query('limit') int? limit = 8,
     @Extras() Map<String, dynamic>? extras,
     @DioOptions() RequestOptions? options,
   });
@@ -116,22 +151,6 @@ abstract class MatchesClient {
   @GET('/api/v1/matches/stats/unviewed-count')
   Future<void> getUnviewedCountApiV1MatchesStatsUnviewedCountGet({
     @Query('token') String? token,
-    @Extras() Map<String, dynamic>? extras,
-    @DioOptions() RequestOptions? options,
-  });
-
-  /// Discover matches for endless scroll.
-  ///
-  /// Get matches for discovery with endless scroll functionality. Returns up to 8 matches ordered from least to most relevant, filtered by minimum 60% similarity score.
-  ///
-  /// [offset] - Number of matches to skip for pagination.
-  ///
-  /// [limit] - Number of matches to return (max 8).
-  @GET('/api/v1/matches/discover')
-  Future<MatchDiscoveryResponse> discoverMatchesApiV1MatchesDiscoverGet({
-    @Query('token') String? token,
-    @Query('offset') int? offset = 0,
-    @Query('limit') int? limit = 8,
     @Extras() Map<String, dynamic>? extras,
     @DioOptions() RequestOptions? options,
   });

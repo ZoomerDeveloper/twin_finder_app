@@ -51,7 +51,6 @@ class _ChangeProfileDetailsPageState extends State<ChangeProfileDetailsPage> {
   List<Country> _countrySuggestions = [];
   List<City> _citySuggestions = [];
   Country? _selectedCountry;
-  City? _selectedCity;
 
   @override
   void initState() {
@@ -73,15 +72,7 @@ class _ChangeProfileDetailsPageState extends State<ChangeProfileDetailsPage> {
       if (profile.country != null) {
         _selectedCountry = Country(name: profile.country!, code: 'XX');
       }
-      if (profile.city != null) {
-        _selectedCity = City(
-          name: profile.city!,
-          country: profile.country ?? '',
-          countryCode: 'XX',
-          lat: 0,
-          lon: 0,
-        );
-      }
+      // City will be handled by text controller
 
       // Сохраняем оригинальную дату для сравнения
       _originalBirthday = profile.birthday;
@@ -415,13 +406,11 @@ class _ChangeProfileDetailsPageState extends State<ChangeProfileDetailsPage> {
       _countrySuggestions = [];
       _cityController.clear();
       _citySuggestions = [];
-      _selectedCity = null;
     });
   }
 
   void _selectCity(City city) {
     setState(() {
-      _selectedCity = city;
       _cityController.text = city.name;
       _citySuggestions = [];
     });
@@ -1199,7 +1188,7 @@ class _ChangeProfileDetailsPageState extends State<ChangeProfileDetailsPage> {
                               fontFamily: 'Bricolage Grotesque',
                             ),
                             duration: const Duration(milliseconds: 200),
-                            child: Text(L.yourCountry(context)),
+                            child: Text('Country'),
                           ),
                         ),
                       ),
@@ -1352,7 +1341,7 @@ class _ChangeProfileDetailsPageState extends State<ChangeProfileDetailsPage> {
                               fontFamily: 'Bricolage Grotesque',
                             ),
                             duration: const Duration(milliseconds: 200),
-                            child: Text(L.yourCity(context)),
+                            child: Text('City'),
                           ),
                         ),
                       ),

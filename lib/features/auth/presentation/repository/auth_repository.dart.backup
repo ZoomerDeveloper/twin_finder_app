@@ -7,18 +7,13 @@ import 'package:twin_finder/api/models/auth_response.dart';
 import 'package:twin_finder/api/models/basic_message_response.dart';
 import 'package:twin_finder/api/models/email_registration_confirm.dart';
 import 'package:twin_finder/api/models/email_registration_request.dart';
-import 'package:twin_finder/api/models/email_register_verify_request.dart';
-import 'package:twin_finder/api/models/email_set_password_request.dart';
-import 'package:twin_finder/api/models/verification_token_response.dart';
 import 'package:twin_finder/api/models/google_login_request.dart';
 import 'package:twin_finder/api/models/apple_login_request.dart';
 import 'package:twin_finder/api/models/login_request.dart';
 import 'package:twin_finder/api/models/logout_request.dart';
 import 'package:twin_finder/api/models/social_login_response.dart';
-import 'dart:io';
 import 'package:twin_finder/api/models/user_profile_response.dart';
 import 'package:twin_finder/api/models/user_update.dart';
-import 'package:twin_finder/api/models/photo_upload_response.dart';
 import 'package:twin_finder/core/errors/api_error.dart';
 import 'package:twin_finder/core/utils/token_secure.dart';
 
@@ -30,17 +25,19 @@ class AuthRepository {
     : api = sl<ApiClient>(),
       tokenStore = sl<TokenStore>();
 
-  Future<AuthResponse> login(String email, String password) async {
+  // JSON login /api/v1/auth/login → AuthResponse
+  Future<void> login(String email, String password) async {
     try {
       final res = await api.authentication.login(
         body: LoginRequest(email: email, password: password),
       );
+
       await tokenStore.save(
         access: res.data?.accessToken,
         refresh: res.data?.refreshToken,
       );
-      return res;
-    } on DioException catch (e) {
+    } catch (e) {
+      // Convert DioException to ApiError for better error handling
       throw ApiError.fromDioException(e);
     }
   }
@@ -74,36 +71,6 @@ class AuthRepository {
   Future<AuthResponse> confirmEmail(String email, String code) async {
     final res = await api.authentication.confirmRegistration(
       body: EmailRegistrationConfirm(email: email, verificationCode: code),
-    );
-
-    await tokenStore.save(
-      access: res.data?.accessToken,
-      refresh: res.data?.refreshToken,
-    );
-    return res;
-  }
-
-  Future<VerificationTokenResponse> verifyEmailCode(
-    String email,
-    String code,
-  ) async {
-    final res = await api.authentication.verifyEmailRegistrationCode(
-      body: EmailRegisterVerifyRequest(email: email, verificationCode: code),
-    );
-    return res;
-  }
-
-  Future<AuthResponse> setPasswordAfterVerification({
-    required String verificationToken,
-    required String password,
-    required String passwordConfirm,
-  }) async {
-    final res = await api.authentication.setPasswordAfterVerification(
-      body: EmailSetPasswordRequest(
-        verificationToken: verificationToken,
-        password: password,
-        passwordConfirm: passwordConfirm,
-      ),
     );
 
     await tokenStore.save(
@@ -147,19 +114,20 @@ class AuthRepository {
           await tokenStore.clear();
           throw Exception('Authentication required - please login again');
         } else if (statusCode != null && statusCode >= 500) {
-          throw Exception('Server error: $statusCode - please try again later');
+          throw Exception('Server error: $statusCode - ${e.message}');
         }
       }
-      throw Exception('Failed to load profile: $e');
+      rethrow;
     }
   }
 
-  /// Check if user has completed profile setup
+  /// Check if user profile is complete
   Future<bool> isProfileComplete() async {
     try {
       final profile = await loadMe();
       final user = profile.data;
 
+      // Check if all required fields are filled
       return user.name.isNotEmpty &&
           user.birthday != null &&
           user.gender != null &&
@@ -230,47 +198,57 @@ class AuthRepository {
     }
   }
 
+  /// Update user profile with validation
+  Future<UserProfileResponse> updateProfile({
+    String? name,
+    DateTime? birthday,
+    String? gender,
+    String? country,
+    String? city,
+  }) async {
+    // Validate input data
+    if (name != null && name.trim().isEmpty) {
+      throw Exception('Name cannot be empty');
+    }
+
+    if (gender != null &&
+        !['male', 'female', 'other', 'prefer_not_to_say'].contains(gender)) {
+      throw Exception('Invalid gender value');
+    }
+
+    final updateData = UserUpdate(
+      name: name?.trim(),
+      birthday: birthday,
+      gender: gender,
+      country: country?.trim(),
+      city: city?.trim(),
+    );
+
+    try {
+      return await api.users.updateMyProfileApiV1UsersMePut(
+        body: updateData,
+      );
+    } catch (e) {
+      if (e is DioException) {
+        final statusCode = e.response?.statusCode;
+        if (statusCode == 400) {
+          throw Exception('Invalid data provided: ${e.message}');
+        } else if (statusCode == 401) {
+          throw Exception('Authentication required');
+        } else if (statusCode != null && statusCode >= 500) {
+          throw Exception('Server error: $statusCode - ${e.message}');
+        }
+      }
+      rethrow;
+    }
+  }
+
   /// Get current user profile or null if not available
   Future<UserProfileResponse?> getCurrentProfile() async {
     try {
       return await loadMe();
     } catch (e) {
       return null;
-    }
-  }
-
-  /// Upload photo for the current user
-  Future<PhotoUploadResponse> uploadPhoto(File photoFile) async {
-    try {
-      // Check if we have a valid access token before making the request
-      final accessToken = await tokenStore.access;
-      if (accessToken == null || accessToken.isEmpty) {
-        throw Exception('No access token available');
-      }
-
-      // Create MultipartFile from File
-      final multipartFile = await MultipartFile.fromFile(
-        photoFile.path,
-        filename: 'photo.jpg',
-      );
-
-      return await api.photos.uploadPhotoApiV1PhotosUploadPost(
-        file: multipartFile,
-      );
-    } catch (e) {
-      if (e is DioException) {
-        final statusCode = e.response?.statusCode;
-        if (statusCode == 401) {
-          // Clear invalid tokens
-          await tokenStore.clear();
-          throw Exception('Authentication required - please login again');
-        } else if (statusCode == 400) {
-          throw Exception('Invalid photo file: ${e.message}');
-        } else if (statusCode != null && statusCode >= 500) {
-          throw Exception('Server error: $statusCode - please try again later');
-        }
-      }
-      throw Exception('Failed to upload photo: $e');
     }
   }
 }

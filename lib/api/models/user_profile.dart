@@ -14,6 +14,7 @@ class UserProfile {
     required this.name,
     required this.isActive,
     required this.isVerified,
+    required this.profileCompleted,
     required this.createdAt,
     required this.updatedAt,
     this.email,
@@ -58,6 +59,10 @@ class UserProfile {
   /// Email verification status
   @JsonKey(name: 'is_verified')
   final bool isVerified;
+
+  /// Profile completion status
+  @JsonKey(name: 'profile_completed')
+  final bool profileCompleted;
 
   /// Account creation timestamp
   @JsonKey(name: 'created_at')

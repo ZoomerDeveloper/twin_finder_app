@@ -6,6 +6,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:pinput/pinput.dart';
 import 'package:twin_finder/core/utils/app_colors.dart';
 import 'package:twin_finder/core/router/app_routes.dart';
+import 'package:twin_finder/core/router/navigation.dart';
 import 'package:twin_finder/core/utils/error_handler.dart';
 import 'package:twin_finder/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:twin_finder/features/auth/presentation/widgets/background_widget.dart';
@@ -41,9 +42,21 @@ class _EmailCodePageState extends State<EmailCodePage> {
   void initState() {
     super.initState();
     _secondsLeft = widget.resendSeconds;
-    _codeController.addListener(() => setState(() {}));
-    _focus.addListener(() => setState(() {}));
+    _codeController.addListener(_onTextChange);
+    _focus.addListener(_onFocusChange);
     _startTimer();
+  }
+
+  void _onTextChange() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  void _onFocusChange() {
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   @override
@@ -69,18 +82,6 @@ class _EmailCodePageState extends State<EmailCodePage> {
 
   bool get _ready => _codeController.text.trim().length >= widget.codeLength;
 
-  Future<void> _pasteFromClipboard() async {
-    final data = await Clipboard.getData('text/plain');
-    final txt = data?.text?.replaceAll(RegExp(r'[^A-Za-z0-9]'), '') ?? '';
-    if (txt.isEmpty) return;
-    final cut = txt.substring(0, txt.length.clamp(0, widget.codeLength));
-    _codeController.text = cut;
-    _codeController.selection = TextSelection.fromPosition(
-      TextPosition(offset: _codeController.text.length),
-    );
-    setState(() {});
-  }
-
   Future<void> _submit() async {
     if (!_ready || _loading) return;
     HapticFeedback.lightImpact();
@@ -91,8 +92,8 @@ class _EmailCodePageState extends State<EmailCodePage> {
     final code = _codeController.text.trim();
 
     try {
-      // Call AuthCubit.confirmEmail() to complete registration
-      context.read<AuthCubit>().confirmEmail(widget.email, code);
+      // Call AuthCubit.verifyEmailCode() to verify code and get token
+      context.read<AuthCubit>().verifyEmailCode(widget.email, code);
 
       // Success will be handled by BlocListener
       HapticFeedback.mediumImpact();
@@ -163,6 +164,17 @@ class _EmailCodePageState extends State<EmailCodePage> {
             context,
             'Verification code resent to your email!',
           );
+        } else if (state is AuthEmailVerified) {
+          // Code verified successfully, navigate to password setup
+          if (mounted) {
+            context.onlyAnimatedRoute(
+              AppRoutes.passwordSetup,
+              arguments: {
+                'email': state.email,
+                'verificationToken': state.verificationToken,
+              },
+            );
+          }
         } else if (state is AuthAuthenticated ||
             state is AuthNeedsProfileSetupWithData) {
           // Registration successful, navigate to profile setup

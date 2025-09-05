@@ -13,10 +13,9 @@ class EmailRegistrationConfirm {
     required this.email,
     required this.verificationCode,
   });
-
-  factory EmailRegistrationConfirm.fromJson(Map<String, Object?> json) =>
-      _$EmailRegistrationConfirmFromJson(json);
-
+  
+  factory EmailRegistrationConfirm.fromJson(Map<String, Object?> json) => _$EmailRegistrationConfirmFromJson(json);
+  
   /// User email address
   final String email;
 

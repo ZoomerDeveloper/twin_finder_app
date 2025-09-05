@@ -308,18 +308,19 @@ class _BirthPageState extends State<BirthPage> {
                                 // Check if update was successful and navigate
                                 if (mounted) {
                                   final currentState = authCubit.state;
-                                  if (currentState is AuthAuthenticated) {
+                                  if (currentState is AuthAuthenticated ||
+                                      currentState
+                                          is AuthNeedsProfileSetupWithData) {
                                     debugPrint(
                                       'Birthday updated successfully, navigating to gender page',
                                     );
                                     // Pass profile data to next page
                                     final nextPageProfileData =
-                                        widget.profileData ??
-                                        UserProfileResponse(
-                                          success: true,
-                                          message: 'Profile updated',
-                                          data: currentState.me.data,
-                                        );
+                                        currentState is AuthAuthenticated
+                                        ? currentState.me
+                                        : (currentState
+                                                  as AuthNeedsProfileSetupWithData)
+                                              .profile;
                                     debugPrint(
                                       'About to navigate to gender page with data: ${nextPageProfileData.data.name}',
                                     );

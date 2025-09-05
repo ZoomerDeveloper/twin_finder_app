@@ -6,27 +6,38 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'apple_login_request.g.dart';
 
-/// Apple OAuth login request schema.
+/// Apple Firebase Authentication login request schema.
 @JsonSerializable()
 class AppleLoginRequest {
   const AppleLoginRequest({
     required this.idToken,
-    this.authorizationCode,
-    this.user,
+    this.name,
+    this.birthday,
+    this.gender,
+    this.country,
+    this.city,
   });
   
   factory AppleLoginRequest.fromJson(Map<String, Object?> json) => _$AppleLoginRequestFromJson(json);
   
-  /// Apple ID token
+  /// Firebase ID token from Apple sign-in
   @JsonKey(name: 'id_token')
   final String idToken;
 
-  /// Apple authorization code
-  @JsonKey(name: 'authorization_code')
-  final String? authorizationCode;
+  /// User name
+  final String? name;
 
-  /// Apple user data
-  final dynamic user;
+  /// User birthday (YYYY-MM-DD)
+  final DateTime? birthday;
+
+  /// User gender
+  final String? gender;
+
+  /// User country
+  final String? country;
+
+  /// User city
+  final String? city;
 
   Map<String, Object?> toJson() => _$AppleLoginRequestToJson(this);
 }

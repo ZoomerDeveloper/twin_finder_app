@@ -1,19 +1,18 @@
 import 'package:dio/dio.dart';
-import 'package:twin_finder/api/models/matches_response.dart';
+import 'package:twin_finder/api/api_client.dart';
+import 'package:twin_finder/api/models/match_list_response.dart';
 
 class MatchesRepository {
-  final Dio _dio;
+  final ApiClient _apiClient;
 
-  MatchesRepository(this._dio);
+  MatchesRepository(Dio dio) : _apiClient = ApiClient(dio);
 
-  Future<MatchesResponse> getMatches({int page = 0, int perPage = 20}) async {
+  Future<MatchListResponse> getMatches({int page = 0, int perPage = 20}) async {
     try {
-      final response = await _dio.get(
-        '/v1/matches/',
-        queryParameters: {'page': page, 'per_page': perPage},
+      return await _apiClient.matches.getMatchesApiV1MatchesGet(
+        page: page,
+        perPage: perPage,
       );
-
-      return MatchesResponse.fromJson(response.data);
     } on DioException catch (e) {
       throw _handleDioError(e);
     } catch (e) {

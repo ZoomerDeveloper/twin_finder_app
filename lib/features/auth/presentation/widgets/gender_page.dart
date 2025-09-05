@@ -226,18 +226,19 @@ class _GenderPageState extends State<GenderPage> {
                                 // Check if update was successful and navigate
                                 if (mounted) {
                                   final currentState = authCubit.state;
-                                  if (currentState is AuthAuthenticated) {
+                                  if (currentState is AuthAuthenticated ||
+                                      currentState
+                                          is AuthNeedsProfileSetupWithData) {
                                     debugPrint(
                                       'Gender updated successfully, navigating to location page',
                                     );
                                     // Pass profile data to next page
                                     final nextPageProfileData =
-                                        widget.profileData ??
-                                        UserProfileResponse(
-                                          success: true,
-                                          message: 'Profile updated',
-                                          data: currentState.me.data,
-                                        );
+                                        currentState is AuthAuthenticated
+                                        ? currentState.me
+                                        : (currentState
+                                                  as AuthNeedsProfileSetupWithData)
+                                              .profile;
                                     debugPrint(
                                       'About to navigate to location page with data: ${nextPageProfileData.data.name}',
                                     );

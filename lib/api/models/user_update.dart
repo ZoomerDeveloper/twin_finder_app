@@ -10,6 +10,7 @@ part 'user_update.g.dart';
 @JsonSerializable()
 class UserUpdate {
   const UserUpdate({
+    this.password,
     this.name,
     this.birthday,
     this.gender,
@@ -19,6 +20,8 @@ class UserUpdate {
   
   factory UserUpdate.fromJson(Map<String, Object?> json) => _$UserUpdateFromJson(json);
   
+  /// User password
+  final String? password;
   final String? name;
   final DateTime? birthday;
 

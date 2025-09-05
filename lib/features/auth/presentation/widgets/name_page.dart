@@ -231,18 +231,19 @@ class _NamePageState extends State<NamePage> {
                                     'Current state after update: ${currentState.runtimeType}',
                                   );
 
-                                  if (currentState is AuthAuthenticated) {
+                                  if (currentState is AuthAuthenticated ||
+                                      currentState
+                                          is AuthNeedsProfileSetupWithData) {
                                     debugPrint(
                                       'Profile updated successfully, navigating to birthday page',
                                     );
                                     // Pass profile data to next page
                                     final nextPageProfileData =
-                                        widget.profileData ??
-                                        UserProfileResponse(
-                                          success: true,
-                                          message: 'Profile updated',
-                                          data: currentState.me.data,
-                                        );
+                                        currentState is AuthAuthenticated
+                                        ? currentState.me
+                                        : (currentState
+                                                  as AuthNeedsProfileSetupWithData)
+                                              .profile;
                                     debugPrint(
                                       'About to navigate to birthday page with data: ${nextPageProfileData.data.name}',
                                     );

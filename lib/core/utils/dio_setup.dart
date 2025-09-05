@@ -12,7 +12,7 @@ final sl = GetIt.instance;
 Dio createDio() {
   final dio = Dio(
     BaseOptions(
-      baseUrl: 'http://161.97.64.169:8000', // из servers в OpenAPI
+      baseUrl: 'https://api.twinfinder.app', // продакшн API
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 20),
     ),

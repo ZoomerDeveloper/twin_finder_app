@@ -92,6 +92,9 @@ class _SplashScreenState extends State<SplashScreen>
           } else if (state is AuthUnauthenticated) {
             // No valid token, navigate to auth page
             context.animatedRoute(AppRoutes.auth);
+          } else if (state is AuthMaintenance) {
+            // Server is under maintenance, navigate to maintenance page
+            context.animatedRoute(AppRoutes.maintenance);
           }
         },
         child: Container(

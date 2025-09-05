@@ -215,4 +215,12 @@ class L {
   static String yourCountry(BuildContext context) => s(context, 'your_country');
   static String yourCity(BuildContext context) => s(context, 'your_city');
   static String saveProfile(BuildContext context) => s(context, 'save_profile');
+
+  // Maintenance page
+  static String maintenanceTitle(BuildContext context) =>
+      s(context, 'maintenance_title');
+  static String maintenanceDescription(BuildContext context) =>
+      s(context, 'maintenance_description');
+  static String maintenanceRetry(BuildContext context) =>
+      s(context, 'maintenance_retry');
 }

@@ -2,10 +2,13 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'dart:io';
 import 'package:twin_finder/api/models/apple_login_request.dart';
 import 'package:twin_finder/api/models/google_login_request.dart';
 import 'package:twin_finder/api/models/user_profile_response.dart';
+import 'package:twin_finder/api/models/photo_upload_response.dart';
 import 'package:twin_finder/core/errors/api_error.dart';
+import 'package:twin_finder/core/utils/error_handler.dart';
 import 'package:twin_finder/features/auth/presentation/repository/auth_repository.dart';
 part 'auth_state.dart';
 
@@ -15,6 +18,9 @@ class AuthCubit extends Cubit<AuthState> {
 
   // Flag to prevent multiple simultaneous profile checks
   bool _isCheckingProfile = false;
+
+  // Cache for profile data to avoid repeated requests
+  UserProfileResponse? _cachedProfile;
 
   Future<void> appStarted() async {
     debugPrint('appStarted: Starting app initialization...');
@@ -61,10 +67,10 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  Future<void> register(String email, String password) async {
+  Future<void> register(String email) async {
     emit(AuthLoading());
     try {
-      await repo.authEmail(email, password);
+      await repo.authEmail(email);
       // For successful email registration initiation, emit success state
       emit(AuthEmailCodeSent(email: email));
     } catch (e) {
@@ -78,7 +84,7 @@ class AuthCubit extends Cubit<AuthState> {
     emit(AuthLoading());
     try {
       // For resending code, we don't need password since it was already sent
-      await repo.authEmail(email, '');
+      await repo.authEmail(email);
       // For successful code resend, emit success state
       emit(AuthEmailCodeSent(email: email));
     } catch (e) {
@@ -96,6 +102,41 @@ class AuthCubit extends Cubit<AuthState> {
     } catch (e) {
       emit(AuthFailure(e)); // Pass the actual error object, not toString()
       // Don't emit AuthUnauthenticated here to avoid duplicate state changes
+    }
+  }
+
+  Future<void> verifyEmailCode(String email, String code) async {
+    emit(AuthLoading());
+    try {
+      final response = await repo.verifyEmailCode(email, code);
+      // For successful code verification, emit new state with verification token
+      emit(
+        AuthEmailVerified(
+          email: email,
+          verificationToken: response.verificationToken,
+        ),
+      );
+    } catch (e) {
+      emit(AuthFailure(e)); // Pass the actual error object, not toString()
+    }
+  }
+
+  Future<void> setPasswordAfterVerification({
+    required String verificationToken,
+    required String password,
+    required String passwordConfirm,
+  }) async {
+    emit(AuthLoading());
+    try {
+      await repo.setPasswordAfterVerification(
+        verificationToken: verificationToken,
+        password: password,
+        passwordConfirm: passwordConfirm,
+      );
+      // Check profile completeness after successful password setup
+      await checkProfileCompleteness();
+    } catch (e) {
+      emit(AuthFailure(e)); // Pass the actual error object, not toString()
     }
   }
 
@@ -139,6 +180,9 @@ class AuthCubit extends Cubit<AuthState> {
   Future<void> logout() async {
     // emit(AuthLoading());
     await repo.logout();
+    // Clear cached profile data
+    _cachedProfile = null;
+    debugPrint('Profile cache cleared on logout');
     // emit(AuthUnauthenticated());
   }
 
@@ -171,9 +215,14 @@ class AuthCubit extends Cubit<AuthState> {
           country: country,
           city: city,
         );
-        debugPrint('Profile update successful, emitting AuthAuthenticated');
-        emit(AuthAuthenticated(updatedProfile));
-        debugPrint('State changed to AuthAuthenticated');
+
+        // Update cache with new profile data
+        _cachedProfile = updatedProfile;
+        debugPrint('Profile updated and cache refreshed');
+
+        // Check profile completeness after update to determine next state
+        debugPrint('Checking profile completeness after update...');
+        await checkProfileCompleteness();
       } catch (e) {
         debugPrint('Profile update failed: $e');
         // Determine which field failed to update
@@ -203,7 +252,16 @@ class AuthCubit extends Cubit<AuthState> {
         state is AuthNeedsProfileSetupWithData) {
       emit(AuthLoading());
       try {
-        final me = await repo.loadMe();
+        // Use cached profile if available, otherwise load from API
+        UserProfileResponse me;
+        if (_cachedProfile != null) {
+          debugPrint('Using cached profile for loadProfile');
+          me = _cachedProfile!;
+        } else {
+          me = await repo.loadMe();
+          _cachedProfile = me; // Cache the profile
+          debugPrint('Profile loaded from API for loadProfile and cached');
+        }
         emit(AuthAuthenticated(me));
       } catch (e) {
         emit(AuthFailure(e.toString()));
@@ -224,20 +282,23 @@ class AuthCubit extends Cubit<AuthState> {
     debugPrint('Starting profile completeness check...');
 
     try {
-      final profile = await repo.loadMe();
-      debugPrint('Profile loaded successfully');
+      // Use cached profile if available, otherwise load from API
+      UserProfileResponse profile;
+      if (_cachedProfile != null) {
+        debugPrint('Using cached profile data');
+        profile = _cachedProfile!;
+      } else {
+        profile = await repo.loadMe();
+        _cachedProfile = profile; // Cache the profile
+        debugPrint('Profile loaded from API and cached');
+      }
 
-      // Check if all required fields are filled
+      // Check if profile is complete using server-side flag
       final user = profile.data;
-      final isComplete =
-          user.name.isNotEmpty &&
-          user.birthday != null &&
-          user.gender != null &&
-          user.country != null &&
-          user.city != null;
+      final isComplete = user.profileCompleted;
 
       debugPrint(
-        'Profile completeness check: name=${user.name.isNotEmpty}, birthday=${user.birthday != null}, gender=${user.gender != null}, country=${user.country != null}, city=${user.city != null}',
+        'Profile completeness check: profileCompleted=${user.profileCompleted}, name=${user.name.isNotEmpty}, birthday=${user.birthday != null}, gender=${user.gender != null}, country=${user.country != null}, city=${user.city != null}',
       );
 
       if (isComplete) {
@@ -259,6 +320,10 @@ class AuthCubit extends Cubit<AuthState> {
         // No valid token - user needs to authenticate
         debugPrint('No valid token, emitting AuthUnauthenticated');
         emit(AuthUnauthenticated());
+      } else if (_isMaintenanceError(e)) {
+        // Maintenance error - show maintenance page
+        debugPrint('Maintenance error detected, emitting AuthMaintenance');
+        emit(AuthMaintenance());
       } else if (e.toString().contains('500') ||
           e.toString().contains('Internal Server Error') ||
           e.toString().contains('Server error')) {
@@ -282,5 +347,21 @@ class AuthCubit extends Cubit<AuthState> {
     if (state is AuthNeedsProfileSetup) {
       emit(AuthProfileSetupComplete());
     }
+  }
+
+  Future<void> uploadPhoto(File photoFile) async {
+    emit(AuthLoading());
+    try {
+      final response = await repo.uploadPhoto(photoFile);
+      // Photo uploaded successfully, emit success state
+      emit(AuthPhotoUploaded(response));
+    } catch (e) {
+      emit(AuthFailure(e)); // Pass the actual error object, not toString()
+    }
+  }
+
+  /// Check if error indicates maintenance and emit appropriate state
+  bool _isMaintenanceError(dynamic error) {
+    return ErrorHandler.isMaintenanceError(error);
   }
 }

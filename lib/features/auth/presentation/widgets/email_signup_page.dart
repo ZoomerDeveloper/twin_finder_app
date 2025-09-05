@@ -20,35 +20,32 @@ class EmailSignupPage extends StatefulWidget {
 
 class _EmailSignupPageState extends State<EmailSignupPage> {
   final FocusNode _emailFocus = FocusNode();
-  final FocusNode _passwordFocus = FocusNode();
-  final FocusNode _confirmPasswordFocus = FocusNode();
   final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController =
-      TextEditingController();
   bool _loading = false;
-  bool _showPassword = false;
-  bool _showConfirmPassword = false;
 
   @override
   void initState() {
     super.initState();
-    _emailFocus.addListener(() => setState(() {}));
-    _passwordFocus.addListener(() => setState(() {}));
-    _confirmPasswordFocus.addListener(() => setState(() {}));
-    _emailController.addListener(() => setState(() {}));
-    _passwordController.addListener(() => setState(() {}));
-    _confirmPasswordController.addListener(() => setState(() {}));
+    _emailFocus.addListener(_onFocusChange);
+    _emailController.addListener(_onTextChange);
+  }
+
+  void _onFocusChange() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  void _onTextChange() {
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   @override
   void dispose() {
     _emailFocus.dispose();
-    _passwordFocus.dispose();
-    _confirmPasswordFocus.dispose();
     _emailController.dispose();
-    _passwordController.dispose();
-    _confirmPasswordController.dispose();
     super.dispose();
   }
 
@@ -60,19 +57,8 @@ class _EmailSignupPageState extends State<EmailSignupPage> {
     return re.hasMatch(v);
   }
 
-  bool get _validPassword {
-    final v = _passwordController.text.trim();
-    return v.length >= 8;
-  }
-
-  bool get _validConfirmPassword {
-    final password = _passwordController.text.trim();
-    final confirm = _confirmPasswordController.text.trim();
-    return confirm.isNotEmpty && password == confirm;
-  }
-
   bool get _canSubmit {
-    return _validEmail && _validPassword && _validConfirmPassword && !_loading;
+    return _validEmail && !_loading;
   }
 
   Future<void> _submit() async {
@@ -82,11 +68,10 @@ class _EmailSignupPageState extends State<EmailSignupPage> {
       _loading = true;
     });
     final email = _emailController.text.trim().toLowerCase();
-    final password = _passwordController.text.trim();
 
     try {
-      // Call AuthCubit.register() to initiate email registration with password
-      context.read<AuthCubit>().register(email, password);
+      // Call AuthCubit.register() to initiate email registration
+      context.read<AuthCubit>().register(email);
       // Navigation will be handled by BlocListener when AuthEmailCodeSent is emitted
     } catch (e) {
       HapticFeedback.heavyImpact();
@@ -187,10 +172,11 @@ class _EmailSignupPageState extends State<EmailSignupPage> {
                           controller: _emailController,
                           cursorHeight: 16,
                           cursorColor: AppColors.backgroundTop,
-                          textInputAction: TextInputAction.next,
+                          textInputAction: TextInputAction.done,
                           keyboardType: TextInputType.emailAddress,
                           autofillHints: const [AutofillHints.email],
                           textAlignVertical: TextAlignVertical.center,
+                          onSubmitted: (_) => _submit(),
                           decoration: InputDecoration(
                             hintText: '',
                             border: OutlineInputBorder(
@@ -214,7 +200,6 @@ class _EmailSignupPageState extends State<EmailSignupPage> {
                             color: Colors.black,
                             fontFamily: 'Bricolage Grotesque',
                           ),
-                          // Removed onSubmitted to prevent auto-submission on Enter
                         ),
                       ),
                     ),
@@ -259,231 +244,6 @@ class _EmailSignupPageState extends State<EmailSignupPage> {
               ),
 
               const SizedBox(height: 16),
-
-              // Password field with floating label
-              Container(
-                margin: const EdgeInsets.symmetric(horizontal: 16),
-                height: 56,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Stack(
-                  children: [
-                    Center(
-                      child: Padding(
-                        padding: const EdgeInsets.only(top: 12),
-                        child: TextField(
-                          focusNode: _passwordFocus,
-                          controller: _passwordController,
-                          obscureText: !_showPassword,
-                          cursorHeight: 16,
-                          cursorColor: AppColors.backgroundTop,
-                          textInputAction: TextInputAction.next,
-                          keyboardType: TextInputType.visiblePassword,
-                          autofillHints: const [AutofillHints.newPassword],
-                          textAlignVertical: TextAlignVertical.center,
-                          decoration: InputDecoration(
-                            hintText: '',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(16),
-                              borderSide: BorderSide.none,
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 0,
-                            ),
-                            hintStyle: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w400,
-                              color: Colors.grey[600],
-                              fontFamily: 'Bricolage Grotesque',
-                            ),
-                          ),
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w400,
-                            color: Colors.black,
-                            fontFamily: 'Bricolage Grotesque',
-                          ),
-                          // Removed onSubmitted to prevent auto-submission on Enter
-                        ),
-                      ),
-                    ),
-                    // Floating label
-                    IgnorePointer(
-                      child: AnimatedAlign(
-                        alignment:
-                            (_passwordFocus.hasFocus ||
-                                _passwordController.text.isNotEmpty)
-                            ? Alignment.topLeft
-                            : Alignment.centerLeft,
-                        duration: const Duration(milliseconds: 200),
-                        child: AnimatedPadding(
-                          duration: const Duration(milliseconds: 200),
-                          padding: EdgeInsets.only(
-                            left: 16,
-                            top:
-                                (_passwordFocus.hasFocus ||
-                                    _passwordController.text.isNotEmpty)
-                                ? 8
-                                : 0,
-                          ),
-                          child: AnimatedDefaultTextStyle(
-                            style: TextStyle(
-                              fontSize:
-                                  (_passwordFocus.hasFocus ||
-                                      _passwordController.text.isNotEmpty)
-                                  ? 12
-                                  : 20,
-                              fontWeight: FontWeight.w400,
-                              color: Colors.black,
-                              fontFamily: 'Bricolage Grotesque',
-                            ),
-                            duration: const Duration(milliseconds: 200),
-                            child: Text(L.enterPassword(context)),
-                          ),
-                        ),
-                      ),
-                    ),
-                    // Show/hide password button
-                    Positioned(
-                      right: 16,
-                      top: 20,
-                      child: GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            _showPassword = !_showPassword;
-                          });
-                        },
-                        child: Icon(
-                          _showPassword
-                              ? Icons.visibility_off
-                              : Icons.visibility,
-                          color: Colors.grey[600],
-                          size: 20,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              // Confirm Password field with floating label
-              Container(
-                margin: const EdgeInsets.symmetric(horizontal: 16),
-                height: 56,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Stack(
-                  children: [
-                    Center(
-                      child: Padding(
-                        padding: const EdgeInsets.only(top: 12),
-                        child: TextField(
-                          focusNode: _confirmPasswordFocus,
-                          controller: _confirmPasswordController,
-                          obscureText: !_showConfirmPassword,
-                          cursorHeight: 16,
-                          cursorColor: AppColors.backgroundTop,
-                          textInputAction: TextInputAction.done,
-                          keyboardType: TextInputType.visiblePassword,
-                          autofillHints: const [AutofillHints.newPassword],
-                          textAlignVertical: TextAlignVertical.center,
-                          decoration: InputDecoration(
-                            hintText: '',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(16),
-                              borderSide: BorderSide.none,
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 0,
-                            ),
-                            hintStyle: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w400,
-                              color: Colors.grey[600],
-                              fontFamily: 'Bricolage Grotesque',
-                            ),
-                          ),
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w400,
-                            color: Colors.black,
-                            fontFamily: 'Bricolage Grotesque',
-                          ),
-                          // Removed onSubmitted to prevent auto-submission on Enter
-                        ),
-                      ),
-                    ),
-                    // Floating label
-                    IgnorePointer(
-                      child: AnimatedAlign(
-                        alignment:
-                            (_confirmPasswordFocus.hasFocus ||
-                                _confirmPasswordController.text.isNotEmpty)
-                            ? Alignment.topLeft
-                            : Alignment.centerLeft,
-                        duration: const Duration(milliseconds: 200),
-                        child: AnimatedPadding(
-                          duration: const Duration(milliseconds: 200),
-                          padding: EdgeInsets.only(
-                            left: 16,
-                            top:
-                                (_confirmPasswordFocus.hasFocus ||
-                                    _confirmPasswordController.text.isNotEmpty)
-                                ? 8
-                                : 0,
-                          ),
-                          child: AnimatedDefaultTextStyle(
-                            style: TextStyle(
-                              fontSize:
-                                  (_confirmPasswordFocus.hasFocus ||
-                                      _confirmPasswordController
-                                          .text
-                                          .isNotEmpty)
-                                  ? 12
-                                  : 20,
-                              fontWeight: FontWeight.w400,
-                              color: Colors.black,
-                              fontFamily: 'Bricolage Grotesque',
-                            ),
-                            duration: const Duration(milliseconds: 200),
-                            child: Text(L.confirmYourPassword(context)),
-                          ),
-                        ),
-                      ),
-                    ),
-                    // Show/hide confirm password button
-                    Positioned(
-                      right: 16,
-                      top: 20,
-                      child: GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            _showConfirmPassword = !_showConfirmPassword;
-                          });
-                        },
-                        child: Icon(
-                          _showConfirmPassword
-                              ? Icons.visibility_off
-                              : Icons.visibility,
-                          color: Colors.grey[600],
-                          size: 20,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Error message removed - not visible under inputs
-              const SizedBox(height: 8),
 
               // Info text
               Padding(

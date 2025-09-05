@@ -10,7 +10,7 @@ final class MatchesInitial extends MatchesState {}
 final class MatchesLoading extends MatchesState {}
 
 final class MatchesLoaded extends MatchesState {
-  final List<Match> matches;
+  final List<MatchWithUser> matches;
   final bool hasNext;
   final bool hasPrev;
   final int currentPage;

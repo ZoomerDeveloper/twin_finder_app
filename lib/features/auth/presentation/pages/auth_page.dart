@@ -223,6 +223,12 @@ class AuthPage extends StatelessWidget {
           );
           // Navigate to name page with profile data for pre-filling
           context.onlyAnimatedRoute(AppRoutes.name, arguments: [state.profile]);
+        } else if (state is AuthMaintenance) {
+          debugPrint(
+            'BlocListener: Maintenance detected, navigating to maintenance page',
+          );
+          // Navigate to maintenance page
+          context.onlyAnimatedRoute(AppRoutes.maintenance);
         }
       },
       child: Scaffold(
