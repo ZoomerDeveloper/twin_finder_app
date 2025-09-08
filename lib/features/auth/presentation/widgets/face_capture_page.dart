@@ -14,6 +14,7 @@ import 'package:twin_finder/core/utils/error_handler.dart';
 import 'package:twin_finder/core/router/app_routes.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:twin_finder/features/auth/presentation/cubit/auth_cubit.dart';
+import 'package:image/image.dart' as img;
 
 class FaceCapturePage extends StatefulWidget {
   const FaceCapturePage({super.key});
@@ -129,9 +130,12 @@ class _FaceCapturePageState extends State<FaceCapturePage>
       // При желании можно остановить превью (не обязательно)
       // await _controller?.pausePreview();
 
-      // Загружаем фотографию на сервер
-      final photoFile = File(file.path);
-      await context.read<AuthCubit>().uploadPhoto(photoFile);
+      // Подготовим изображение: фиксируем EXIF ориентацию, размораживаем зеркальность фронталки и кодируем JPEG
+      final isFront = _controller!.description.lensDirection == CameraLensDirection.front;
+      final processedFile = await _preparePhotoForUpload(File(file.path), flipHorizontal: isFront);
+
+      // Загружаем фотографию на сервер (уже корректное JPEG)
+      await context.read<AuthCubit>().uploadPhoto(processedFile);
 
       // После успешной загрузки показываем результат
       if (mounted) {
@@ -139,11 +143,29 @@ class _FaceCapturePageState extends State<FaceCapturePage>
       }
     } catch (e) {
       if (mounted) {
-        ErrorHandler.showError(
-          context,
-          '${L.error(context)}: $e',
-          title: L.error(context),
-        );
+        // Friendly, specific messages based on backend reason
+        String msg = e.toString();
+        String title = 'Upload failed';
+
+        if (msg.toLowerCase().contains('face too small')) {
+          title = 'Face too small';
+          msg = 'Move closer and center your face inside the frame.';
+        } else if (msg.toLowerCase().contains('invalid photo')) {
+          title = 'Invalid photo';
+          msg = 'Make sure your face is clearly visible and well lit.';
+        } else if (msg.toLowerCase().contains('limit')) {
+          title = 'Daily limit reached';
+          msg = 'You’ve reached today’s upload limit. Please try again later.';
+        } else if (msg.toLowerCase().contains('too large')) {
+          title = 'File too large';
+          msg = 'Please take a closer shot or lower resolution.';
+        } else if (msg.toLowerCase().contains('authentication')) {
+          title = 'Authentication required';
+          msg = 'Please log in again to continue.';
+        }
+
+        ErrorHandler.showError(context, msg, title: title);
+        
         // Возвращаемся к live режиму при ошибке
         setState(() {
           _phase = _Phase.live;
@@ -153,6 +175,38 @@ class _FaceCapturePageState extends State<FaceCapturePage>
     } finally {
       if (mounted) setState(() => _isBusy = false);
     }
+  }
+
+  Future<File> _preparePhotoForUpload(
+    File inputFile, {
+    bool flipHorizontal = false,
+  }) async {
+    final bytes = await inputFile.readAsBytes();
+
+    // Декодируем изображение (поддержка JPEG/HEIC зависит от платформы; camera даёт JPEG)
+    final decoded = img.decodeImage(bytes);
+    if (decoded == null) {
+      // На всякий случай — если не смогли декодировать, отправим как есть
+      return inputFile;
+    }
+
+    // Применим EXIF-ориентацию (делает картинку «как видно пользователю»)
+    img.Image fixed = img.bakeOrientation(decoded);
+
+    // Для фронтальной камеры уберём зеркальность, если есть
+    if (flipHorizontal) {
+      fixed = img.flipHorizontal(fixed);
+    }
+
+    // Кодируем в JPEG с хорошим качеством
+    final jpg = img.encodeJpg(fixed, quality: 92);
+
+    // Пишем рядом с оригиналом, чтобы не тянуть path_provider
+    final dirPath = inputFile.parent.path;
+    final outPath = dirPath + '/processed_' + DateTime.now().millisecondsSinceEpoch.toString() + '.jpg';
+    final outFile = File(outPath);
+    await outFile.writeAsBytes(jpg, flush: true);
+    return outFile;
   }
 
   @override

@@ -350,12 +350,25 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   Future<void> uploadPhoto(File photoFile) async {
+    // Allow upload regardless of transient auth states; repo will enforce token
     emit(AuthLoading());
     try {
+      debugPrint('Starting photo upload...');
       final response = await repo.uploadPhoto(photoFile);
+      debugPrint('Photo upload successful: ${response.data.id}');
       // Photo uploaded successfully, emit success state
       emit(AuthPhotoUploaded(response));
+
+      // Immediately refresh profile so UI doesn't get stuck on a loading state
+      try {
+        final refreshed = await repo.loadMe();
+        _cachedProfile = refreshed;
+        emit(AuthAuthenticated(refreshed));
+      } catch (refreshError) {
+        debugPrint('Failed to refresh profile after upload: $refreshError');
+      }
     } catch (e) {
+      debugPrint('Photo upload failed: $e');
       emit(AuthFailure(e)); // Pass the actual error object, not toString()
     }
   }

@@ -157,7 +157,7 @@ class LanguageSelectionDialog extends StatelessWidget {
                   ),
                 ),
               );
-            }).toList(),
+            }),
             const SizedBox(height: 16),
             TextButton(
               onPressed: () => Navigator.of(context).pop(),

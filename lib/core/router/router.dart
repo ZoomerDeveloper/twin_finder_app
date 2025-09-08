@@ -163,6 +163,7 @@ class AppRouter {
 
 class SlideAndFadeRoute extends PageRouteBuilder {
   final Widget page;
+  @override
   final RouteSettings settings;
 
   SlideAndFadeRoute({required this.page, required this.settings})

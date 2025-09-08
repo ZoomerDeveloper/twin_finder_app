@@ -20,7 +20,9 @@ import 'package:twin_finder/api/models/user_profile_response.dart';
 import 'package:twin_finder/api/models/user_update.dart';
 import 'package:twin_finder/api/models/photo_upload_response.dart';
 import 'package:twin_finder/core/errors/api_error.dart';
+import 'package:twin_finder/api/models/refresh_token_request.dart';
 import 'package:twin_finder/core/utils/token_secure.dart';
+import 'dart:convert';
 
 class AuthRepository {
   final ApiClient api;
@@ -29,6 +31,39 @@ class AuthRepository {
   AuthRepository(GetIt sl)
     : api = sl<ApiClient>(),
       tokenStore = sl<TokenStore>();
+
+  // Ensure access token is fresh well before expiry
+  Future<void> _refreshIfExpiringSoon({int thresholdSeconds = 120}) async {
+    final access = await tokenStore.access;
+    if (access == null || access.isEmpty) return;
+    try {
+      final parts = access.split('.');
+      if (parts.length != 3) return;
+      var payload = parts[1].replaceAll('-', '+').replaceAll('_', '/');
+      while (payload.length % 4 != 0) {
+        payload += '=';
+      }
+      final jsonMap = jsonDecode(utf8.decode(base64Decode(payload))) as Map<String, dynamic>;
+      final exp = jsonMap['exp'];
+      if (exp is int) {
+        final expiresAt = DateTime.fromMillisecondsSinceEpoch(exp * 1000);
+        if (expiresAt.difference(DateTime.now()).inSeconds <= thresholdSeconds) {
+          final refresh = await tokenStore.refresh;
+          if (refresh != null && refresh.isNotEmpty) {
+            final refreshed = await api.authentication.refreshTokens(
+              body: RefreshTokenRequest(refreshToken: refresh),
+            );
+            await tokenStore.save(
+              access: refreshed.data?.accessToken,
+              refresh: refreshed.data?.refreshToken,
+            );
+          }
+        }
+      }
+    } catch (_) {
+      // If parsing fails, do nothing; interceptor will handle 401
+    }
+  }
 
   Future<AuthResponse> login(String email, String password) async {
     try {
@@ -131,6 +166,7 @@ class AuthRepository {
   /// Load user profile with error handling
   Future<UserProfileResponse> loadMe() async {
     try {
+      await _refreshIfExpiringSoon();
       // Check if we have a valid access token before making the request
       final accessToken = await tokenStore.access;
       if (accessToken == null || accessToken.isEmpty) {
@@ -214,6 +250,7 @@ class AuthRepository {
     );
 
     try {
+      await _refreshIfExpiringSoon();
       return await api.users.updateMyProfileApiV1UsersMePut(body: updateData);
     } catch (e) {
       if (e is DioException) {
@@ -242,10 +279,11 @@ class AuthRepository {
   /// Upload photo for the current user
   Future<PhotoUploadResponse> uploadPhoto(File photoFile) async {
     try {
+      await _refreshIfExpiringSoon();
       // Check if we have a valid access token before making the request
       final accessToken = await tokenStore.access;
       if (accessToken == null || accessToken.isEmpty) {
-        throw Exception('No access token available');
+        throw Exception('No access token available - please login first');
       }
 
       // Create MultipartFile from File
@@ -254,23 +292,63 @@ class AuthRepository {
         filename: 'photo.jpg',
       );
 
+      debugPrint('Uploading photo with token: ${accessToken.substring(0, 20)}...');
+      
       return await api.photos.uploadPhotoApiV1PhotosUploadPost(
         file: multipartFile,
       );
     } catch (e) {
+      debugPrint('Photo upload error: $e');
+      
       if (e is DioException) {
         final statusCode = e.response?.statusCode;
+        final responseData = e.response?.data;
+        
+        debugPrint('Photo upload failed with status: $statusCode');
+        debugPrint('Response data: $responseData');
+        
         if (statusCode == 401) {
           // Clear invalid tokens
           await tokenStore.clear();
           throw Exception('Authentication required - please login again');
         } else if (statusCode == 400) {
-          throw Exception('Invalid photo file: ${e.message}');
+          // Surface backend-provided reason to the UI (e.g., "Face too small")
+          String detail = 'Invalid photo';
+          final data = e.response?.data;
+          if (data is Map<String, dynamic>) {
+            final serverDetail = data['detail'];
+            if (serverDetail is String && serverDetail.trim().isNotEmpty) {
+              detail = serverDetail;
+            }
+          }
+          throw Exception(detail);
+        } else if (statusCode == 429) {
+          final responseData = e.response?.data;
+          final detail = responseData is Map<String, dynamic>
+              ? responseData['detail'] as String?
+              : null;
+          throw Exception(detail ?? 'Photo upload limit reached for today');
+        } else if (statusCode == 413) {
+          throw Exception('Photo file too large - please choose a smaller image');
+        } else if (statusCode == 415) {
+          throw Exception('Unsupported file format - please use JPG or PNG');
         } else if (statusCode != null && statusCode >= 500) {
-          throw Exception('Server error: $statusCode - please try again later');
+          // Server error - provide more specific error message
+          final errorMessage = responseData is Map<String, dynamic> 
+              ? responseData['detail'] ?? 'Server error'
+              : 'Server error: $statusCode - please try again later';
+          throw Exception('Server error: $errorMessage');
         }
       }
+      
+      // Handle the specific "No access token available" case
+      if (e.toString().contains('No access token available')) {
+        throw Exception('Please complete the login process first');
+      }
+      
       throw Exception('Failed to upload photo: $e');
     }
   }
 }
+
+

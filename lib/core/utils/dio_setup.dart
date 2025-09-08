@@ -1,5 +1,6 @@
 // lib/core/network/dio_setup.dart
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
@@ -33,12 +34,68 @@ class _AuthInterceptor extends Interceptor {
   bool _isRefreshing = false;
   final List<Function()> _retryQueue = [];
 
+  bool _isExpiringSoon(String jwt, {int thresholdSeconds = 120}) {
+    try {
+      final parts = jwt.split('.');
+      if (parts.length != 3) return false;
+      String normalized = parts[1].replaceAll('-', '+').replaceAll('_', '/');
+      while (normalized.length % 4 != 0) {
+        normalized += '=';
+      }
+      final payloadMap = _tryParseJson(String.fromCharCodes(
+        Base64Decoder().convert(normalized),
+      ));
+      if (payloadMap == null) return false;
+      final exp = payloadMap['exp'];
+      if (exp is int) {
+        final expiresAt = DateTime.fromMillisecondsSinceEpoch(exp * 1000);
+        final now = DateTime.now();
+        return expiresAt.difference(now).inSeconds <= thresholdSeconds;
+      }
+      return false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Map<String, dynamic>? _tryParseJson(String s) {
+    try {
+      return s.isEmpty ? null : (jsonDecode(s) as Map<String, dynamic>);
+    } catch (_) {
+      return null;
+    }
+  }
+
   @override
   void onRequest(
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
-    final token = await sl<TokenStore>().access;
+    final tokenStore = sl<TokenStore>();
+    String? token = await tokenStore.access;
+
+    // Proactive refresh if token is about to expire soon
+    if (token != null && token.isNotEmpty && _isExpiringSoon(token)) {
+      final api = sl<ApiClient>();
+      final refresh = await tokenStore.refresh;
+      if (refresh != null && refresh.isNotEmpty && !_isRefreshing) {
+        _isRefreshing = true;
+        try {
+          final refreshed = await api.authentication
+              .refreshTokens(body: RefreshTokenRequest(refreshToken: refresh));
+          await tokenStore.save(
+            access: refreshed.data?.accessToken,
+            refresh: refreshed.data?.refreshToken,
+          );
+          token = refreshed.data?.accessToken ?? token;
+        } catch (_) {
+          // fall back to old token; 401 flow will handle if needed
+        } finally {
+          _isRefreshing = false;
+        }
+      }
+    }
+
     if (token != null && token.isNotEmpty) {
       options.headers['Authorization'] = 'Bearer $token';
     }

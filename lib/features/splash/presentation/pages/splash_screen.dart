@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:twin_finder/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:twin_finder/core/localization/export.dart';
 import 'package:twin_finder/core/router/app_routes.dart';

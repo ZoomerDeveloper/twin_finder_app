@@ -9,9 +9,29 @@ import 'package:twin_finder/core/utils/app_formaters.dart';
 import 'package:twin_finder/core/router/app_routes.dart';
 import 'package:twin_finder/core/router/navigation.dart';
 import 'package:twin_finder/core/localization/export.dart';
+import 'package:get_it/get_it.dart';
+import 'package:twin_finder/core/utils/token_secure.dart';
 
-class ProfilePage extends StatelessWidget {
+class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
+
+  @override
+  State<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+  bool _requestedLoad = false;
+
+  void _ensureProfileLoaded(BuildContext context, AuthState state) {
+    if (_requestedLoad) return;
+    // If we're on the profile tab and not authenticated yet, try to load profile once
+    if (state is! AuthAuthenticated && state is! AuthUnauthenticated) {
+      _requestedLoad = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        context.read<AuthCubit>().loadProfile();
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -44,293 +64,298 @@ class ProfilePage extends StatelessWidget {
             ],
           ),
         ),
-        child: BlocBuilder<AuthCubit, AuthState>(
-          builder: (context, state) {
-            if (state is AuthAuthenticated) {
-              final user = state.me.data;
-              return SingleChildScrollView(
-                child: Column(
-                  children: [
-                    // Profile Photo
-                    const SizedBox(height: 4),
-                    Padding(
-                      padding: EdgeInsetsGeometry.symmetric(horizontal: 16),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(16),
-                        child: Container(
-                          width: double.infinity,
-                          height: 516,
-                          decoration: BoxDecoration(color: Colors.grey[200]),
-                          child: Stack(
-                            fit: StackFit.expand,
-                            children: [
-                              user.profilePhotoUrl != null
-                                  ? ClipRRect(
-                                      borderRadius: BorderRadius.circular(16),
-                                      child: Image.network(
-                                        user.profilePhotoUrl!,
-                                        fit: BoxFit.cover,
-                                        errorBuilder:
-                                            (context, error, stackTrace) {
-                                              return _buildDefaultPhoto(
-                                                user.name,
-                                                context,
-                                              );
-                                            },
+        child: BlocListener<AuthCubit, AuthState>(
+          listener: (context, state) {
+            if (state is AuthPhotoUploaded) {
+              context.read<AuthCubit>().loadProfile();
+            }
+          },
+          child: BlocBuilder<AuthCubit, AuthState>(
+            builder: (context, state) {
+              _ensureProfileLoaded(context, state);
+              if (state is AuthAuthenticated) {
+                final user = state.me.data;
+                return SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      // Profile Photo
+                      const SizedBox(height: 4),
+                      Padding(
+                        padding: EdgeInsetsGeometry.symmetric(horizontal: 16),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(16),
+                          child: Container(
+                            width: double.infinity,
+                            height: 516,
+                            decoration: BoxDecoration(color: Colors.grey[200]),
+                            child: Stack(
+                              fit: StackFit.expand,
+                              children: [
+                                user.profilePhotoUrl != null
+                                    ? ClipRRect(
+                                        borderRadius: BorderRadius.circular(16),
+                                        child: _buildProfileImage(
+                                          user.profilePhotoUrl!,
+                                          fallbackName: user.name,
+                                        ),
+                                      )
+                                    : _buildDefaultPhoto(user.name, context),
+                                Align(
+                                  alignment: Alignment.bottomCenter,
+                                  child: Container(
+                                    height: 180,
+                                    width: double.infinity,
+                                    padding: EdgeInsets.all(24),
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        begin: Alignment.topCenter,
+                                        end: Alignment.bottomCenter,
+                                        colors: [
+                                          Colors.black.withOpacity(0),
+                                          Colors.black.withOpacity(0.95),
+                                        ],
                                       ),
-                                    )
-                                  : _buildDefaultPhoto(user.name, context),
-                              Align(
-                                alignment: Alignment.bottomCenter,
-                                child: Container(
-                                  height: 180,
-                                  width: double.infinity,
-                                  padding: EdgeInsets.all(24),
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      begin: Alignment.topCenter,
-                                      end: Alignment.bottomCenter,
-                                      colors: [
-                                        Colors.black.withOpacity(0),
-                                        Colors.black.withOpacity(0.95),
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      mainAxisAlignment: MainAxisAlignment.end,
+                                      children: [
+                                        Text(
+                                          state.me.data.name,
+                                          style: TextStyle(
+                                            fontSize: 40,
+                                            height: 40 / 48,
+                                            fontWeight: FontWeight.w900,
+                                            color: Colors.white,
+                                            fontFamily: 'Bricolage Grotesque',
+                                          ),
+                                        ),
+                                        const SizedBox(height: 16),
+                                        Text(
+                                          formatAgeFromBirthday(
+                                            state.me.data.birthday,
+                                          ),
+                                          style: TextStyle(
+                                            fontSize: 20,
+                                            height: 20 / 24,
+                                            fontFamily: 'Bricolage Grotesque',
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.white,
+                                          ),
+                                        ),
                                       ],
                                     ),
                                   ),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    mainAxisAlignment: MainAxisAlignment.end,
-                                    children: [
-                                      Text(
-                                        state.me.data.name,
-                                        style: TextStyle(
-                                          fontSize: 40,
-                                          height: 40 / 48,
-                                          fontWeight: FontWeight.w900,
-                                          color: Colors.white,
-                                          fontFamily: 'Bricolage Grotesque',
+                                ),
+                                Align(
+                                  alignment: Alignment.topLeft,
+                                  child: Container(
+                                    height: 32,
+                                    margin: const EdgeInsets.only(
+                                      top: 16,
+                                      left: 16,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.white,
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 6,
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          FlagEmoji.getCountryFlag(
+                                            state.me.data.country,
+                                          ),
+                                          style: const TextStyle(fontSize: 15),
                                         ),
-                                      ),
-                                      const SizedBox(height: 16),
-                                      Text(
-                                        formatAgeFromBirthday(
-                                          state.me.data.birthday,
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          state.me.data.city ?? '',
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            height: 16 / 20,
+                                            fontFamily: 'Bricolage Grotesque',
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                         ),
-                                        style: TextStyle(
-                                          fontSize: 20,
-                                          height: 20 / 24,
-                                          fontFamily: 'Bricolage Grotesque',
-                                          fontWeight: FontWeight.w600,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                    ],
+                                      ],
+                                    ),
                                   ),
                                 ),
-                              ),
-                              Align(
-                                alignment: Alignment.topLeft,
-                                child: Container(
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 32),
+
+                      // First Block: Profile Settings
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        margin: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Column(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(8, 0, 16, 0),
+                              child: ListTile(
+                                contentPadding: EdgeInsets.zero,
+                                leading: Container(
                                   height: 32,
-                                  margin: const EdgeInsets.only(
-                                    top: 16,
-                                    left: 16,
-                                  ),
+                                  width: 32,
                                   decoration: BoxDecoration(
-                                    color: AppColors.white,
-                                    borderRadius: BorderRadius.circular(16),
+                                    color: AppColors.backgroundBottom,
+                                    shape: BoxShape.circle,
                                   ),
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 6,
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text(
-                                        FlagEmoji.getCountryFlag(
-                                          state.me.data.country,
-                                        ),
-                                        style: const TextStyle(fontSize: 15),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        state.me.data.city ?? '',
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          height: 16 / 20,
-                                          fontFamily: 'Bricolage Grotesque',
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ],
+                                  alignment: Alignment.center,
+                                  child: SvgPicture.asset(
+                                    AppIcons.smile,
+                                    height: 20,
                                   ),
                                 ),
+                                title: Text(
+                                  L.changePhoto(context),
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.black,
+                                    fontFamily: 'Bricolage Grotesque',
+                                  ),
+                                ),
+                                trailing: const Icon(
+                                  Icons.arrow_forward_ios,
+                                  color: Colors.grey,
+                                  size: 16,
+                                ),
+                                onTap: () {
+                                  Navigator.of(context)
+                                      .pushNamed(AppRoutes.faceCapturePage)
+                                      .then((_) {
+                                    // After returning from capture, refresh profile from server
+                                    if (mounted) {
+                                      context.read<AuthCubit>().loadProfile();
+                                    }
+                                  });
+                                },
                               ),
-                            ],
+                            ),
+
+                            const Divider(
+                              height: 1,
+                              indent: 55,
+                              endIndent: 0,
+                              color: Color(0xFFEFF2FC),
+                            ),
+
+                            // Change Profile Details Button
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(8, 0, 16, 0),
+                              child: ListTile(
+                                contentPadding: EdgeInsets.zero,
+                                leading: Container(
+                                  height: 32,
+                                  width: 32,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.backgroundBottom,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  alignment: Alignment.center,
+                                  child: SvgPicture.asset(
+                                    AppIcons.edit,
+                                    height: 20,
+                                  ),
+                                ),
+
+                                title: Text(
+                                  L.editProfile(context),
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontFamily: 'Bricolage Grotesque',
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                                trailing: const Icon(
+                                  Icons.arrow_forward_ios,
+                                  color: Colors.grey,
+                                  size: 16,
+                                ),
+                                onTap: () {
+                                  Navigator.of(context).pushNamed(AppRoutes.changeProfileDetails);
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 32),
+
+                      // Second Block: Logout
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        margin: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(8, 0, 16, 0),
+                          child: ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            leading: Container(
+                              height: 32,
+                              width: 32,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFF3F8E),
+                                shape: BoxShape.circle,
+                              ),
+                              alignment: Alignment.center,
+                              child: const Icon(
+                                Icons.logout,
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                            ),
+                            title: Text(
+                              L.logout(context),
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontFamily: 'Bricolage Grotesque',
+                                fontWeight: FontWeight.w500,
+                                color: Colors.black,
+                              ),
+                            ),
+                            trailing: const Icon(
+                              Icons.arrow_forward_ios,
+                              color: Colors.grey,
+                              size: 16,
+                            ),
+                            onTap: () {
+                              // Показываем диалог подтверждения
+                              _showLogoutConfirmationDialog(context);
+                            },
                           ),
                         ),
                       ),
-                    ),
 
-                    const SizedBox(height: 32),
+                      const SizedBox(height: 32),
+                    ],
+                  ),
+                );
+              }
 
-                    // First Block: Profile Settings
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      margin: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Column(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(8, 0, 16, 0),
-                            child: ListTile(
-                              contentPadding: EdgeInsets.zero,
-                              leading: Container(
-                                height: 32,
-                                width: 32,
-                                decoration: BoxDecoration(
-                                  color: AppColors.backgroundBottom,
-                                  shape: BoxShape.circle,
-                                ),
-                                alignment: Alignment.center,
-                                child: SvgPicture.asset(
-                                  AppIcons.smile,
-                                  height: 20,
-                                ),
-                              ),
-                              title: Text(
-                                L.changePhoto(context),
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.black,
-                                  fontFamily: 'Bricolage Grotesque',
-                                ),
-                              ),
-                              trailing: const Icon(
-                                Icons.arrow_forward_ios,
-                                color: Colors.grey,
-                                size: 16,
-                              ),
-                              onTap: () {
-                                // TODO: Implement photo change functionality
-                              },
-                            ),
-                          ),
-
-                          const Divider(
-                            height: 1,
-                            indent: 55,
-                            endIndent: 0,
-                            color: Color(0xFFEFF2FC),
-                          ),
-
-                          // Change Profile Details Button
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(8, 0, 16, 0),
-                            child: ListTile(
-                              contentPadding: EdgeInsets.zero,
-                              leading: Container(
-                                height: 32,
-                                width: 32,
-                                decoration: BoxDecoration(
-                                  color: AppColors.backgroundBottom,
-                                  shape: BoxShape.circle,
-                                ),
-                                alignment: Alignment.center,
-                                child: SvgPicture.asset(
-                                  AppIcons.edit,
-                                  height: 20,
-                                ),
-                              ),
-
-                              title: Text(
-                                L.editProfile(context),
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontFamily: 'Bricolage Grotesque',
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.black,
-                                ),
-                              ),
-                              trailing: const Icon(
-                                Icons.arrow_forward_ios,
-                                color: Colors.grey,
-                                size: 16,
-                              ),
-                              onTap: () {
-                                Navigator.of(
-                                  context,
-                                ).pushNamed(AppRoutes.changeProfileDetails);
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 32),
-
-                    // Second Block: Logout
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      margin: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(8, 0, 16, 0),
-                        child: ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          leading: Container(
-                            height: 32,
-                            width: 32,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFFF3F8E),
-                              shape: BoxShape.circle,
-                            ),
-                            alignment: Alignment.center,
-                            child: const Icon(
-                              Icons.logout,
-                              color: Colors.white,
-                              size: 20,
-                            ),
-                          ),
-                          title: Text(
-                            L.logout(context),
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontFamily: 'Bricolage Grotesque',
-                              fontWeight: FontWeight.w500,
-                              color: Colors.black,
-                            ),
-                          ),
-                          trailing: const Icon(
-                            Icons.arrow_forward_ios,
-                            color: Colors.grey,
-                            size: 16,
-                          ),
-                          onTap: () {
-                            // Показываем диалог подтверждения
-                            _showLogoutConfirmationDialog(context);
-                          },
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 32),
-                  ],
-                ),
+              return const Center(
+                child: CircularProgressIndicator(color: Color(0xFFFF3F8E)),
               );
-            }
-
-            return const Center(
-              child: CircularProgressIndicator(color: Color(0xFFFF3F8E)),
-            );
-          },
+            },
+          ),
         ),
       ),
     );
@@ -375,6 +400,49 @@ class ProfilePage extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Widget _buildProfileImage(String url, {required String fallbackName}) {
+    final cacheBust = DateTime.now().millisecondsSinceEpoch;
+    final uri = Uri.parse(_normalizePhotoUrl(url));
+    final bustUrl = uri.replace(queryParameters: {
+      ...uri.queryParameters,
+      'v': cacheBust.toString(),
+    }).toString();
+
+    return FutureBuilder<String?>(
+      future: GetIt.I<TokenStore>().access,
+      builder: (context, snapshot) {
+        final token = snapshot.data;
+        return Image.network(
+          bustUrl,
+          fit: BoxFit.cover,
+          headers: token != null && token.isNotEmpty
+              ? {'Authorization': 'Bearer $token'}
+              : const {},
+          errorBuilder: (context, error, stackTrace) {
+            return _buildDefaultPhoto(fallbackName, context);
+          },
+        );
+      },
+    );
+  }
+
+  String _normalizePhotoUrl(String url) {
+    // Backend sometimes returns an IP:port http URL that 404s.
+    // Normalize to the public HTTPS host.
+    try {
+      final u = Uri.parse(url);
+      if (u.host == '161.97.64.169') {
+        return Uri.parse('https://api.twinfinder.app${u.path}').toString();
+      }
+      if (u.scheme == 'http') {
+        return url.replaceFirst('http://', 'https://');
+      }
+      return url;
+    } catch (_) {
+      return url;
+    }
   }
 
   void _showLogoutConfirmationDialog(BuildContext context) {

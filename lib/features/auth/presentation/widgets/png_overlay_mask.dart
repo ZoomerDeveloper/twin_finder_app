@@ -1,6 +1,5 @@
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 // Рисует полупрозрачный overlay и вырезает «окно» по альфе PNG.
 // Плюс рисует белое кольцо той же формы (толщину регулирует ringWidth).

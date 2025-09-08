@@ -70,7 +70,7 @@ class _CountryCityInlineState extends State<CountryCityInline> {
   final _cityFocus = FocusNode();
 
   Timer? _debounce;
-  bool _loadingCountry = false;
+  final bool _loadingCountry = false;
   bool _loadingCity = false;
 
   List<Country> _countrySuggestions = [];

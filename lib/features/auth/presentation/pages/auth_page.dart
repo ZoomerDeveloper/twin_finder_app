@@ -26,7 +26,7 @@ class AuthPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    String _generateNonce([int length = 32]) {
+    String generateNonce([int length = 32]) {
       const charset =
           '0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._';
       final random = Random.secure();
@@ -36,7 +36,7 @@ class AuthPage extends StatelessWidget {
       ).join();
     }
 
-    String _sha256OfString(String input) {
+    String sha256OfString(String input) {
       final bytes = utf8.encode(input);
       final digest = sha256.convert(bytes);
       return digest.toString();
@@ -64,8 +64,8 @@ class AuthPage extends StatelessWidget {
           return;
         }
 
-        final rawNonce = _generateNonce();
-        final nonce = _sha256OfString(rawNonce);
+        final rawNonce = generateNonce();
+        final nonce = sha256OfString(rawNonce);
 
         AuthorizationCredentialAppleID credential;
         try {
