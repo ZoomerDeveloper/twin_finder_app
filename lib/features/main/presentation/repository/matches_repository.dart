@@ -29,14 +29,11 @@ class MatchesRepository {
       final apiPage = page + 1;
       debugPrint('Making API request: page=$apiPage, perPage=$perPage');
 
-      // Retrofit generator currently tries to call toJson() on dynamic query params
-      // when they are null, causing a NoSuchMethodError. Pass reasonable defaults
-      // instead of nulls to avoid the generator bug and match backend expectations.
       final response = await _apiClient.matches.getMatchesApiV1MatchesGet(
         page: apiPage,
         perPage: perPage,
-        minSimilarity: 0.0,
-        maxSimilarity: 1.0,
+        minSimilarity: null,
+        maxSimilarity: null,
         viewedOnly: null,
       );
 

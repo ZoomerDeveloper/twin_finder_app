@@ -168,7 +168,8 @@ class _TwinFinderPageState extends State<TwinFinderPage> {
                                       crossAxisCount: 2,
                                       crossAxisSpacing: 16,
                                       mainAxisSpacing: 16,
-                                      childAspectRatio: 0.8,
+                                      // Tall cards with fixed aspect avoid overflow
+                                      childAspectRatio: 0.62,
                                     ),
                                 itemCount: matches.length,
                                 itemBuilder: (context, index) {
@@ -241,141 +242,102 @@ class _TwinFinderPageState extends State<TwinFinderPage> {
   }
 
   Widget _buildMatchCard(MatchWithUser match) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+    final photoUrl = match.matchedUserProfilePhotoUrl;
+    final normalized = _normalizePhotoUrl(photoUrl);
+    final cacheBust = DateTime.now().millisecondsSinceEpoch;
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: Stack(
         children: [
-          // Avatar
-          Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              color: _getSimilarityColor(match).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(40),
-            ),
-            child: Center(
-              child: match.matchedUserProfilePhotoUrl != null
-                  ? ClipRRect(
-                      borderRadius: BorderRadius.circular(40),
-                      child: Image.network(
-                        match.matchedUserProfilePhotoUrl!,
-                        width: 80,
-                        height: 80,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Text(
-                            match.matchedUserName.substring(0, 1).toUpperCase(),
-                            style: TextStyle(
-                              fontSize: 32,
-                              fontWeight: FontWeight.bold,
-                              color: _getSimilarityColor(match),
-                            ),
-                          );
-                        },
-                      ),
-                    )
-                  : Text(
-                      match.matchedUserName.substring(0, 1).toUpperCase(),
-                      style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        color: _getSimilarityColor(match),
-                      ),
-                    ),
-            ),
+          // Photo
+          AspectRatio(
+            aspectRatio: 9 / 16,
+            child: normalized != null
+                ? Image.network(
+                    '$normalized?v=$cacheBust',
+                    fit: BoxFit.cover,
+                  )
+                : Container(color: Colors.grey[300]),
           ),
 
-          const SizedBox(height: 16),
-
-          // Name
-          Text(
-            match.matchedUserName,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: Colors.black,
-            ),
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-
-          const SizedBox(height: 8),
-
-          // Similarity
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: _getSimilarityColor(match),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              '${match.similarityPercentage}%',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
+          // Gradient bottom overlay
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.transparent,
+                    Colors.black.withOpacity(0.85),
+                  ],
+                ),
               ),
-            ),
-          ),
-
-          const SizedBox(height: 8),
-
-          // Similarity Level
-          Text(
-            _getSimilarityLevel(match),
-            style: TextStyle(
-              color: _getSimilarityColor(match),
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // View Profile Button
-          SizedBox(
-            width: double.infinity,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: ElevatedButton(
-                onPressed: () {
-                  // TODO: Navigate to match profile
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.transparent,
-                  foregroundColor: _getSimilarityColor(match),
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                    side: BorderSide(
-                      color: _getSimilarityColor(match),
-                      width: 1,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    match.matchedUserName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
-                ),
-                child: const Text(
-                  'View Profile',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-                ),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          '${match.similarityPercentage}% MATCH',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
           ),
         ],
       ),
     );
+  }
+
+  String? _normalizePhotoUrl(String? url) {
+    if (url == null) return null;
+    try {
+      final u = Uri.parse(url);
+      if (u.host == '161.97.64.169') {
+        return Uri.parse('https://api.twinfinder.app${u.path}').toString();
+      }
+      if (u.scheme == 'http') {
+        return url.replaceFirst('http://', 'https://');
+      }
+      return url;
+    } catch (_) {
+      return url;
+    }
   }
 
   Widget _buildEmptyState() {
