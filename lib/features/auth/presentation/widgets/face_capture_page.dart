@@ -150,6 +150,9 @@ class _FaceCapturePageState extends State<FaceCapturePage>
         if (msg.toLowerCase().contains('face too small')) {
           title = 'Face too small';
           msg = 'Move closer and center your face inside the frame.';
+        } else if (msg.toLowerCase().contains('profile not completed')) {
+          title = 'Complete profile first';
+          msg = 'Please fill in name, birthday, gender, country and city before uploading.';
         } else if (msg.toLowerCase().contains('invalid photo')) {
           title = 'Invalid photo';
           msg = 'Make sure your face is clearly visible and well lit.';

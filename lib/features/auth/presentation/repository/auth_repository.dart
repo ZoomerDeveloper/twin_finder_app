@@ -322,6 +322,13 @@ class AuthRepository {
             }
           }
           throw Exception(detail);
+        } else if (statusCode == 403) {
+          // Profile incomplete or forbidden – surface backend reason
+          final data = e.response?.data;
+          final detail = data is Map<String, dynamic>
+              ? (data['detail'] as String?)
+              : null;
+          throw Exception(detail ?? 'Profile not completed. Please finish your profile first.');
         } else if (statusCode == 429) {
           final responseData = e.response?.data;
           final detail = responseData is Map<String, dynamic>
