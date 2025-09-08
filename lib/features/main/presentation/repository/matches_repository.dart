@@ -1,6 +1,9 @@
 import 'package:dio/dio.dart';
 import 'package:twin_finder/api/api_client.dart';
 import 'package:twin_finder/api/models/match_list_response.dart';
+import 'package:twin_finder/core/utils/token_secure.dart';
+import 'package:get_it/get_it.dart';
+import 'package:flutter/foundation.dart';
 
 class MatchesRepository {
   final ApiClient _apiClient;
@@ -9,13 +12,38 @@ class MatchesRepository {
 
   Future<MatchListResponse> getMatches({int page = 0, int perPage = 20}) async {
     try {
-      return await _apiClient.matches.getMatchesApiV1MatchesGet(
-        page: page,
-        perPage: perPage,
+      // Check if user is authenticated
+      final tokenStore = GetIt.instance<TokenStore>();
+      final accessToken = await tokenStore.access;
+
+      if (accessToken == null || accessToken.isEmpty) {
+        debugPrint('No access token available for matches request');
+        throw Exception('Authentication required - please login first');
+      }
+
+      debugPrint(
+        'Loading matches with token: ${accessToken.substring(0, 20)}...',
       );
+
+      // API expects 1-based page numbers, but we use 0-based internally
+      final apiPage = page + 1;
+      debugPrint('Making API request: page=$apiPage, perPage=$perPage');
+
+      final response = await _apiClient.matches.getMatchesApiV1MatchesGet(
+        page: apiPage,
+        perPage: perPage,
+        minSimilarity: null,
+        maxSimilarity: null,
+        viewedOnly: null,
+      );
+
+      debugPrint('API response received: ${response.matches.length} matches');
+      return response;
     } on DioException catch (e) {
+      debugPrint('DioException in getMatches: ${e.type} - ${e.message}');
       throw _handleDioError(e);
     } catch (e) {
+      debugPrint('General error in getMatches: $e');
       throw Exception('Failed to load matches: $e');
     }
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:twin_finder/api/models/match_with_user.dart';
 import 'package:twin_finder/core/utils/app_colors.dart';
@@ -17,11 +18,22 @@ class _TwinFinderPageState extends State<TwinFinderPage> {
   @override
   void initState() {
     super.initState();
+    debugPrint('TwinFinderPage initState called');
     // Load matches only when page is first displayed
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      debugPrint(
+        'TwinFinderPage postFrameCallback called, mounted: $mounted, _hasLoadedMatches: $_hasLoadedMatches',
+      );
       if (mounted && !_hasLoadedMatches) {
         _hasLoadedMatches = true;
-        context.read<MatchesCubit>().loadMatches();
+        debugPrint('Calling loadMatches from TwinFinderPage');
+        try {
+          final cubit = context.read<MatchesCubit>();
+          debugPrint('MatchesCubit found, calling loadMatches');
+          cubit.loadMatches();
+        } catch (e) {
+          debugPrint('Error accessing MatchesCubit: $e');
+        }
       }
     });
   }

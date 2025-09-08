@@ -17,12 +17,15 @@ class MatchesCubit extends Cubit<MatchesState> {
   MatchesCubit(this._repository) : super(MatchesInitial());
 
   Future<void> loadMatches({int page = 0, int perPage = 20}) async {
+    debugPrint('loadMatches called with page: $page, perPage: $perPage');
+
     // Prevent multiple simultaneous requests
     if (_hasLoadedMatches && page == 0) {
       debugPrint('Matches already loaded, skipping...');
       return;
     }
 
+    debugPrint('Emitting MatchesLoading state');
     emit(MatchesLoading());
 
     try {
@@ -32,7 +35,9 @@ class MatchesCubit extends Cubit<MatchesState> {
         debugPrint('Using cached matches data');
         response = _cachedMatches!;
       } else {
+        debugPrint('Loading matches from API...');
         response = await _repository.getMatches(page: page, perPage: perPage);
+        debugPrint('API response received: ${response.matches.length} matches');
         // Cache first page data
         if (page == 0) {
           _cachedMatches = response;
@@ -41,6 +46,12 @@ class MatchesCubit extends Cubit<MatchesState> {
         }
       }
 
+      debugPrint(
+        'Emitting MatchesLoaded state with ${response.matches.length} matches',
+      );
+      debugPrint(
+        'Response details: hasNext=${response.hasNext}, hasPrev=${response.hasPrev}, total=${response.total}',
+      );
       emit(
         MatchesLoaded(
           matches: response.matches,
@@ -50,6 +61,7 @@ class MatchesCubit extends Cubit<MatchesState> {
         ),
       );
     } catch (e) {
+      debugPrint('Error loading matches: $e');
       emit(MatchesFailure(e.toString()));
     }
   }

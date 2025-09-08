@@ -40,7 +40,8 @@ abstract class MatchesClient {
   ///
   /// [maxSimilarity] - Maximum similarity score for generated matches.
   @POST('/api/v1/matches/generate/random')
-  Future<MatchGenerationResponse> generateRandomMatchesApiV1MatchesGenerateRandomPost({
+  Future<MatchGenerationResponse>
+  generateRandomMatchesApiV1MatchesGenerateRandomPost({
     @Query('min_similarity') dynamic minSimilarity,
     @Query('max_similarity') dynamic maxSimilarity,
     @Query('token') String? token,
@@ -65,8 +66,8 @@ abstract class MatchesClient {
   @GET('/api/v1/matches/')
   Future<MatchListResponse> getMatchesApiV1MatchesGet({
     @Query('viewed_only') bool? viewedOnly,
-    @Query('min_similarity') dynamic minSimilarity,
-    @Query('max_similarity') dynamic maxSimilarity,
+    @Query('min_similarity') double? minSimilarity,
+    @Query('max_similarity') double? maxSimilarity,
     @Query('token') String? token,
     @Query('page') int? page = 1,
     @Query('per_page') int? perPage = 20,

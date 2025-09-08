@@ -51,9 +51,9 @@
 	<true/>
 	<key>NSCameraUsageDescription</key>
 	<string>We need camera to take your portrait</string>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>We need location to automatically fill your country and city</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>We need location to automatically fill your country and city</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>We need location to automatically fill your country and city</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
