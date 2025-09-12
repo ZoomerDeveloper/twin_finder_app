@@ -206,7 +206,7 @@ class _FaceCapturePageState extends State<FaceCapturePage>
 
     // Пишем рядом с оригиналом, чтобы не тянуть path_provider
     final dirPath = inputFile.parent.path;
-    final outPath = dirPath + '/processed_' + DateTime.now().millisecondsSinceEpoch.toString() + '.jpg';
+    final outPath = '$dirPath/processed_${DateTime.now().millisecondsSinceEpoch}.jpg';
     final outFile = File(outPath);
     await outFile.writeAsBytes(jpg, flush: true);
     return outFile;

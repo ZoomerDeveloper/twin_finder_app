@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
@@ -12,7 +11,6 @@ import 'package:crypto/crypto.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:twin_finder/api/models/apple_login_request.dart';
-import 'package:twin_finder/api/models/google_login_request.dart';
 import 'package:twin_finder/core/router/app_routes.dart';
 import 'package:twin_finder/core/router/navigation.dart';
 import 'package:twin_finder/core/utils/app_images.dart';

@@ -1,8 +1,9 @@
 import 'package:dio/dio.dart';
 import 'package:twin_finder/api/api_client.dart';
 import 'package:twin_finder/api/models/match_list_response.dart';
-import 'package:twin_finder/core/utils/token_secure.dart';
+import 'package:twin_finder/api/models/match_generation_response.dart';
 import 'package:get_it/get_it.dart';
+import 'package:twin_finder/core/utils/token_secure.dart';
 import 'package:flutter/foundation.dart';
 
 class MatchesRepository {
@@ -45,6 +46,30 @@ class MatchesRepository {
     } catch (e) {
       debugPrint('General error in getMatches: $e');
       throw Exception('Failed to load matches: $e');
+    }
+  }
+
+  Future<MatchGenerationResponse> generateNeuralMatches({
+    int limit = 5,
+    double minSimilarity = 0.3,
+  }) async {
+    try {
+      // Direct call via Dio because generated client may not include this new endpoint yet
+      final dio = GetIt.instance<Dio>();
+      final res = await dio.post(
+        '/api/v1/matches/generate/neural',
+        queryParameters: {
+          'limit': limit,
+          'min_similarity': minSimilarity,
+        },
+      );
+      return MatchGenerationResponse.fromJson(
+        Map<String, Object?>.from(res.data as Map),
+      );
+    } on DioException catch (e) {
+      throw _handleDioError(e);
+    } catch (e) {
+      throw Exception('Failed to generate matches: $e');
     }
   }
 

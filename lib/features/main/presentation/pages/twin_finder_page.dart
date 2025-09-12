@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:twin_finder/api/models/match_with_user.dart';
 import 'package:twin_finder/core/utils/app_colors.dart';
@@ -221,6 +220,20 @@ class _TwinFinderPageState extends State<TwinFinderPage> {
                 ),
               );
             },
+          ),
+        ),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          context.read<MatchesCubit>().generateNewMatches(limit: 8, minSimilarity: 0.6);
+        },
+        backgroundColor: const Color(0xFFFF3F8E),
+        foregroundColor: Colors.white,
+        icon: const Icon(Icons.auto_awesome),
+        label: const Text(
+          'Find New Matches',
+          style: TextStyle(
+            fontWeight: FontWeight.w700,
           ),
         ),
       ),
