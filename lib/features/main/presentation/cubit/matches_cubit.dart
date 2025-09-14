@@ -96,4 +96,17 @@ class MatchesCubit extends Cubit<MatchesState> {
     _hasLoadedMatches = false;
     loadMatches();
   }
+
+  Future<void> generateNewMatches({int limit = 5, double minSimilarity = 0.3}) async {
+    emit(MatchesLoading());
+    try {
+      await _repository.generateNeuralMatches(limit: limit, minSimilarity: minSimilarity);
+      // After generation, clear cache and reload page 0
+      _cachedMatches = null;
+      _hasLoadedMatches = false;
+      await loadMatches(page: 0);
+    } catch (e) {
+      emit(MatchesFailure(e.toString()));
+    }
+  }
 }
