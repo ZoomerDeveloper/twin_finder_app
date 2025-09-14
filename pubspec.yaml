@@ -59,6 +59,7 @@ dependencies:
   geocoding: ^3.0.0
   flutter_localizations:
     sdk: flutter
+  cached_network_image: ^3.4.1
 
 
 
