@@ -47,6 +47,7 @@ class AuthPage extends StatelessWidget {
         bool isAvailable;
         try {
           isAvailable = await SignInWithApple.isAvailable();
+          print('Apple Sign-In available: $isAvailable');
         } catch (e) {
           print('Error checking Apple Sign-In availability: $e');
           isAvailable = false;
@@ -56,7 +57,7 @@ class AuthPage extends StatelessWidget {
           print('Apple Sign-In not available on this device');
           ErrorHandler.showInfo(
             context,
-            'Apple Sign-In not available on this device',
+            'Apple Sign-In is not available on this device. Please use another sign-in method.',
             title: 'Apple Sign-In',
           );
           return;
@@ -75,7 +76,9 @@ class AuthPage extends StatelessWidget {
             nonce: nonce,
           );
         } catch (appleError) {
+          print('Apple Sign-In error details: $appleError');
           final errorString = appleError.toString().toLowerCase();
+
           if (errorString.contains('canceled') ||
               errorString.contains('cancelled') ||
               errorString.contains('cancel') ||
@@ -85,13 +88,26 @@ class AuthPage extends StatelessWidget {
             return;
           }
 
-          // Check for other specific Apple Sign-In errors
+          // Check for specific Apple Sign-In error codes
+          if (errorString.contains('authorizationerrorcode.unknown') ||
+              errorString.contains('error 1000')) {
+            print('Apple Sign-In error 1000: $appleError');
+            ErrorHandler.showError(
+              context,
+              'Apple Sign-In is temporarily unavailable. Please try again later or use another sign-in method.',
+              title: 'Apple Sign-In',
+            );
+            return;
+          }
+
+          // Check for OAuth response errors
           if (errorString.contains('invalid_credential') ||
-              errorString.contains('invalid_oauth_response')) {
+              errorString.contains('invalid_oauth_response') ||
+              errorString.contains('oauth response from apple.com')) {
             print('OAuth Apple Sign-In error: $appleError');
             ErrorHandler.showError(
               context,
-              'Apple Sign-In authorization error. Please try again.',
+              'Apple Sign-In configuration error. Please check your Apple Developer account settings.',
               title: 'Apple Sign-In',
             );
             return;
@@ -123,15 +139,34 @@ class AuthPage extends StatelessWidget {
           return;
         }
 
-        // Create OAuth credential for Firebase
-        final oauthCredential = OAuthProvider(
-          'apple.com',
-        ).credential(idToken: credential.identityToken, rawNonce: rawNonce);
+        print('Apple Sign-In success:');
+        print('  - User ID: ${credential.userIdentifier}');
+        print('  - Email: ${credential.email ?? "not provided"}');
+        print('  - Given Name: ${credential.givenName ?? "not provided"}');
+        print('  - Family Name: ${credential.familyName ?? "not provided"}');
+        print('  - Identity Token length: ${credential.identityToken!.length}');
+        print(
+          '  - Authorization Code: ${credential.authorizationCode ?? "not provided"}',
+        );
+        print('  - Raw Nonce: $rawNonce');
+        print('  - Hashed Nonce: $nonce');
 
         try {
+          print('Creating Firebase OAuth credential...');
+          final oauthCredential = OAuthProvider(
+            'apple.com',
+          ).credential(idToken: credential.identityToken, rawNonce: rawNonce);
+
+          print('Signing in with Firebase...');
           final userCred = await FirebaseAuth.instance.signInWithCredential(
             oauthCredential,
           );
+
+          print('Firebase sign-in successful:');
+          print('  - Firebase UID: ${userCred.user?.uid}');
+          print('  - Firebase Email: ${userCred.user?.email}');
+          print('  - Firebase Display Name: ${userCred.user?.displayName}');
+          print('  - Firebase Email Verified: ${userCred.user?.emailVerified}');
 
           final firebaseIdToken = await userCred.user!.getIdToken(true);
 
@@ -139,26 +174,64 @@ class AuthPage extends StatelessWidget {
             throw Exception('Failed to get Firebase ID token');
           }
 
+          print(
+            'Firebase ID Token obtained, length: ${firebaseIdToken.length}',
+          );
+
           // Create Apple login request - only idToken is required
           final appleRequest = AppleLoginRequest(idToken: firebaseIdToken);
 
           // Call AuthCubit to handle Apple authentication
           context.read<AuthCubit>().authApple(appleRequest);
         } catch (firebaseError) {
-          print('Firebase authentication error: $firebaseError');
+          print('Firebase authentication error details:');
+          print('  - Error type: ${firebaseError.runtimeType}');
+          print('  - Error message: $firebaseError');
+          print('  - Error code: ${(firebaseError as dynamic).code}');
+          print('  - Error details: ${(firebaseError as dynamic).message}');
+
+          // Дополнительная диагностика для invalid-credential
+          if (firebaseError.toString().contains('invalid-credential')) {
+            print('🔍 Apple Sign-In диагностика:');
+            print(
+              '  - Identity Token: ${credential.identityToken?.substring(0, 50)}...',
+            );
+            print('  - Raw Nonce: $rawNonce');
+            print('  - Hashed Nonce: $nonce');
+            print('  - User ID: ${credential.userIdentifier}');
+            print('  - Authorization Code: ${credential.authorizationCode}');
+
+            // Проверяем, что nonce совпадает
+            final expectedNonce = sha256OfString(rawNonce);
+            print('  - Expected nonce: $expectedNonce');
+            print('  - Nonce match: ${expectedNonce == nonce}');
+          }
+
           ErrorHandler.showError(
             context,
-            'Authentication error: ${firebaseError.toString()}',
-            title: 'Authentication',
+            'Apple Sign-In configuration error. Please check Firebase Console settings.',
+            title: 'Apple Sign-In',
           );
         }
       } catch (e) {
         print('Apple Sign-In error: $e');
-        ErrorHandler.showError(
-          context,
-          'Apple Sign-In error: ${e.toString()}',
-          title: 'Apple Sign-In',
-        );
+
+        // Check for specific error codes in the general catch
+        final errorString = e.toString().toLowerCase();
+        if (errorString.contains('authorizationerrorcode.unknown') ||
+            errorString.contains('error 1000')) {
+          ErrorHandler.showError(
+            context,
+            'Apple Sign-In is temporarily unavailable. Please try again later or use another sign-in method.',
+            title: 'Apple Sign-In',
+          );
+        } else {
+          ErrorHandler.showError(
+            context,
+            'Apple Sign-In error: ${e.toString()}',
+            title: 'Apple Sign-In',
+          );
+        }
       }
     }
 

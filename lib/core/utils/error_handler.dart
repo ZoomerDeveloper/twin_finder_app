@@ -270,6 +270,16 @@ class ErrorHandler {
     // Дополнительная проверка для строковых ошибок
     final errorString = error.toString().toLowerCase();
     print('🔧 Maintenance check - Error string: $errorString');
+
+    // Исключаем ошибки Apple Sign-In из проверки технических работ
+    if (errorString.contains('apple sign-in') ||
+        errorString.contains('signinwithapple') ||
+        errorString.contains('authorizationerrorcode') ||
+        errorString.contains('com.apple.authenticationservices')) {
+      print('🔧 Apple Sign-In error detected, not a maintenance error');
+      return false;
+    }
+
     if (errorString.contains('connection refused') ||
         errorString.contains('socketexception') ||
         errorString.contains('connection error')) {

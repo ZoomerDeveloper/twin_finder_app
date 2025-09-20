@@ -15,6 +15,7 @@ abstract class AppIcons {
   static const String edit = 'assets/icons/edit.svg';
   static const String profile = 'assets/icons/profile.svg';
   static const String swipes = 'assets/icons/swipes.svg';
+  static const String match = 'assets/icons/match.svg';
   static const String chat = 'assets/icons/chat.svg';
 }
 

@@ -19,11 +19,22 @@ class AuthCubit extends Cubit<AuthState> {
   // Flag to prevent multiple simultaneous profile checks
   bool _isCheckingProfile = false;
 
+  // Flag to prevent repeated calls after authentication failure
+  bool _hasAuthenticationFailed = false;
+
   // Cache for profile data to avoid repeated requests
   UserProfileResponse? _cachedProfile;
 
   Future<void> appStarted() async {
     debugPrint('appStarted: Starting app initialization...');
+
+    // Prevent repeated calls after authentication failure
+    if (_hasAuthenticationFailed) {
+      debugPrint('appStarted: Authentication already failed, skipping...');
+      emit(AuthUnauthenticated());
+      return;
+    }
+
     emit(AuthLoading());
     try {
       // Check profile completeness instead of just loading profile
@@ -40,6 +51,8 @@ class AuthCubit extends Cubit<AuthState> {
     emit(AuthLoading());
     try {
       await repo.login(email, password);
+      // Reset authentication failure flag on successful login
+      _hasAuthenticationFailed = false;
       // Check profile completeness after successful login
       await checkProfileCompleteness();
     } catch (e) {
@@ -153,6 +166,8 @@ class AuthCubit extends Cubit<AuthState> {
       // Add a small delay to ensure tokens are properly saved
       await Future.delayed(const Duration(milliseconds: 500));
 
+      // Reset authentication failure flag on successful login
+      _hasAuthenticationFailed = false;
       // Check profile completeness after successful authentication
       await checkProfileCompleteness();
     } catch (e) {
@@ -169,6 +184,8 @@ class AuthCubit extends Cubit<AuthState> {
       // Add a small delay to ensure tokens are properly saved
       await Future.delayed(const Duration(milliseconds: 500));
 
+      // Reset authentication failure flag on successful login
+      _hasAuthenticationFailed = false;
       // Check profile completeness after successful authentication
       await checkProfileCompleteness();
     } catch (e) {
@@ -278,6 +295,13 @@ class AuthCubit extends Cubit<AuthState> {
       return;
     }
 
+    // Prevent repeated calls after authentication failure
+    if (_hasAuthenticationFailed) {
+      debugPrint('Authentication already failed, skipping profile check...');
+      emit(AuthUnauthenticated());
+      return;
+    }
+
     _isCheckingProfile = true;
     debugPrint('Starting profile completeness check...');
 
@@ -319,6 +343,7 @@ class AuthCubit extends Cubit<AuthState> {
           e.toString().contains('Authentication required')) {
         // No valid token - user needs to authenticate
         debugPrint('No valid token, emitting AuthUnauthenticated');
+        _hasAuthenticationFailed = true; // Set flag to prevent repeated calls
         emit(AuthUnauthenticated());
       } else if (_isMaintenanceError(e)) {
         // Maintenance error - show maintenance page
@@ -347,6 +372,11 @@ class AuthCubit extends Cubit<AuthState> {
     if (state is AuthNeedsProfileSetup) {
       emit(AuthProfileSetupComplete());
     }
+  }
+
+  /// Reset authentication failure flag (call after successful login)
+  void resetAuthenticationFailure() {
+    _hasAuthenticationFailed = false;
   }
 
   Future<void> uploadPhoto(File photoFile) async {

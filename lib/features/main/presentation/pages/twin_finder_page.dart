@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:twin_finder/api/models/match_with_user.dart';
 import 'package:twin_finder/core/utils/app_colors.dart';
+import 'package:twin_finder/core/utils/app_images.dart';
 import 'package:twin_finder/features/main/presentation/cubit/matches_cubit.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class TwinFinderPage extends StatefulWidget {
   const TwinFinderPage({super.key});
@@ -139,22 +142,22 @@ class _TwinFinderPageState extends State<TwinFinderPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             // Header
-                            const Text(
-                              'Found Matches',
-                              style: TextStyle(
-                                color: Colors.black,
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              '${matches.length} people look similar to you',
-                              style: TextStyle(
-                                color: Colors.grey[600],
-                                fontSize: 16,
-                              ),
-                            ),
+                            // const Text(
+                            //   'Found Matches',
+                            //   style: TextStyle(
+                            //     color: Colors.black,
+                            //     fontSize: 20,
+                            //     fontWeight: FontWeight.bold,
+                            //   ),
+                            // ),
+                            // const SizedBox(height: 8),
+                            // Text(
+                            //   '${matches.length} people look similar to you',
+                            //   style: TextStyle(
+                            //     color: Colors.grey[600],
+                            //     fontSize: 16,
+                            //   ),
+                            // ),
                             const SizedBox(height: 24),
 
                             // Matches Grid
@@ -168,7 +171,7 @@ class _TwinFinderPageState extends State<TwinFinderPage> {
                                       crossAxisSpacing: 16,
                                       mainAxisSpacing: 16,
                                       // Tall cards with fixed aspect avoid overflow
-                                      childAspectRatio: 0.62,
+                                      childAspectRatio: 0.55,
                                     ),
                                 itemCount: matches.length,
                                 itemBuilder: (context, index) {
@@ -259,81 +262,92 @@ class _TwinFinderPageState extends State<TwinFinderPage> {
     final normalized = _normalizePhotoUrl(photoUrl);
     final cacheBust = DateTime.now().millisecondsSinceEpoch;
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
-      child: Stack(
-        children: [
-          // Photo
-          AspectRatio(
-            aspectRatio: 9 / 16,
-            child: normalized != null
-                ? Image.network(
-                    '$normalized?v=$cacheBust',
-                    fit: BoxFit.cover,
-                  )
-                : Container(color: Colors.grey[300]),
-          ),
-
-          // Gradient bottom overlay
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.transparent,
-                    Colors.black.withOpacity(0.85),
-                  ],
+    return Stack(
+      children: [
+        // Photo
+        Padding(
+          padding: EdgeInsets.only(top: 20),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: Stack(
+              children: [
+                AspectRatio(
+                  aspectRatio: 9 / 16,
+                  child: normalized != null
+                      ? CachedNetworkImage(
+                          imageUrl: '$normalized?v=$cacheBust',
+                          fit: BoxFit.cover,
+                        )
+                      : Container(color: Colors.grey[300]),
                 ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    match.matchedUserName,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.transparent,
+                          Colors.black.withOpacity(0.85),
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          '${match.similarityPercentage}% MATCH',
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          match.matchedUserName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
                             color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
                           ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.15),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                '${match.similarityPercentage}% MATCH',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
-        ],
-      ),
+        ),
+
+        // Gradient bottom overlay
+        Align(
+          alignment: Alignment.topRight,
+          child: SvgPicture.asset(AppIcons.match),
+        ),
+      ],
     );
   }
 

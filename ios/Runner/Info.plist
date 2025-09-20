@@ -41,7 +41,7 @@
 			<string>AppleSignIn</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>com.artem.twinfinder</string>
+				<string>app.twin.finder</string>
 			</array>
 		</dict>
 	</array>
