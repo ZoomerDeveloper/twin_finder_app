@@ -14,10 +14,20 @@ class MatchesCubit extends Cubit<MatchesState> {
   MatchListResponse? _cachedMatches;
   bool _hasLoadedMatches = false;
 
+  // Flag to prevent requests after authentication failure
+  bool _hasAuthenticationFailed = false;
+
   MatchesCubit(this._repository) : super(MatchesInitial());
 
   Future<void> loadMatches({int page = 0, int perPage = 20}) async {
     debugPrint('loadMatches called with page: $page, perPage: $perPage');
+
+    // Prevent requests after authentication failure
+    if (_hasAuthenticationFailed) {
+      debugPrint('Authentication failed, skipping matches load...');
+      emit(MatchesFailure('Authentication required - please login first'));
+      return;
+    }
 
     // Prevent multiple simultaneous requests
     if (_hasLoadedMatches && page == 0) {
@@ -62,6 +72,17 @@ class MatchesCubit extends Cubit<MatchesState> {
       );
     } catch (e) {
       debugPrint('Error loading matches: $e');
+
+      // Check if it's an authentication error
+      if (e.toString().contains('Authentication required') ||
+          e.toString().contains('Unauthorized') ||
+          e.toString().contains('401')) {
+        _hasAuthenticationFailed = true;
+        debugPrint(
+          'Authentication error detected, setting flag to prevent future requests',
+        );
+      }
+
       emit(MatchesFailure(e.toString()));
     }
   }
@@ -94,13 +115,25 @@ class MatchesCubit extends Cubit<MatchesState> {
     // Clear cache and reload
     _cachedMatches = null;
     _hasLoadedMatches = false;
+    _hasAuthenticationFailed = false; // Reset auth failure flag
     loadMatches();
   }
 
-  Future<void> generateNewMatches({int limit = 5, double minSimilarity = 0.3}) async {
+  /// Reset authentication failure flag (call after successful login)
+  void resetAuthenticationFailure() {
+    _hasAuthenticationFailed = false;
+  }
+
+  Future<void> generateNewMatches({
+    int limit = 5,
+    double minSimilarity = 0.3,
+  }) async {
     emit(MatchesLoading());
     try {
-      await _repository.generateNeuralMatches(limit: limit, minSimilarity: minSimilarity);
+      await _repository.generateNeuralMatches(
+        limit: limit,
+        minSimilarity: minSimilarity,
+      );
       // After generation, clear cache and reload page 0
       _cachedMatches = null;
       _hasLoadedMatches = false;

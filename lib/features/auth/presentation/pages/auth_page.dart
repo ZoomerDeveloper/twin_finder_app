@@ -56,7 +56,7 @@ class AuthPage extends StatelessWidget {
           print('Apple Sign-In not available on this device');
           ErrorHandler.showInfo(
             context,
-            'Apple Sign-In not available on this device',
+            'Apple Sign-In is not available on this device. Please use another sign-in method.',
             title: 'Apple Sign-In',
           );
           return;
@@ -82,6 +82,18 @@ class AuthPage extends StatelessWidget {
               errorString.contains('user_canceled') ||
               errorString.contains('user_cancelled')) {
             print('User cancelled Apple Sign-In');
+            return;
+          }
+
+          // Check for specific Apple Sign-In error codes
+          if (errorString.contains('authorizationerrorcode.unknown') ||
+              errorString.contains('error 1000')) {
+            print('Apple Sign-In error 1000: $appleError');
+            ErrorHandler.showError(
+              context,
+              'Apple Sign-In is temporarily unavailable. Please try again later or use another sign-in method.',
+              title: 'Apple Sign-In',
+            );
             return;
           }
 
@@ -154,11 +166,23 @@ class AuthPage extends StatelessWidget {
         }
       } catch (e) {
         print('Apple Sign-In error: $e');
-        ErrorHandler.showError(
-          context,
-          'Apple Sign-In error: ${e.toString()}',
-          title: 'Apple Sign-In',
-        );
+
+        // Check for specific error codes in the general catch
+        final errorString = e.toString().toLowerCase();
+        if (errorString.contains('authorizationerrorcode.unknown') ||
+            errorString.contains('error 1000')) {
+          ErrorHandler.showError(
+            context,
+            'Apple Sign-In is temporarily unavailable. Please try again later or use another sign-in method.',
+            title: 'Apple Sign-In',
+          );
+        } else {
+          ErrorHandler.showError(
+            context,
+            'Apple Sign-In error: ${e.toString()}',
+            title: 'Apple Sign-In',
+          );
+        }
       }
     }
 
