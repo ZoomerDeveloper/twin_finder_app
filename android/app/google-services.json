@@ -39,10 +39,10 @@
               "client_type": 3
             },
             {
-              "client_id": "773404912680-hbjs9mr5gtdj0id4cs6c8012aebuk00t.apps.googleusercontent.com",
+              "client_id": "773404912680-594f0rmf4nfj1g8cp3m2k8jogo8d2s07.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "com.twin.finder"
+                "bundle_id": "app.twin.finder"
               }
             }
           ]

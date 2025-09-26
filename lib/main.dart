@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -13,8 +15,24 @@ import 'package:twin_finder/firebase_options.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  if (Platform.isIOS) {
+    await Firebase.initializeApp();
+  } else {
+    await Future.wait([
+      Firebase.initializeApp(
+        name: 'TwinFinder',
+        options: DefaultFirebaseOptions.currentPlatform,
+      ),
+
+      Future.delayed(const Duration(seconds: 2)), // Минимальное время показа
+    ]);
+  }
+
   await Future.wait([
-    Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform),
+    Firebase.initializeApp(
+      name: 'TwinFinder',
+      options: DefaultFirebaseOptions.currentPlatform,
+    ),
 
     Future.delayed(const Duration(seconds: 2)), // Минимальное время показа
   ]);

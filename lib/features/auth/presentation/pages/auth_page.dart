@@ -10,6 +10,7 @@ import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:twin_finder/api/models/apple_login_request.dart';
 import 'package:twin_finder/core/router/app_routes.dart';
 import 'package:twin_finder/core/router/navigation.dart';
@@ -21,6 +22,9 @@ import 'package:twin_finder/core/utils/error_handler.dart';
 
 class AuthPage extends StatelessWidget {
   const AuthPage({super.key});
+
+  // Защита от двойного старта Apple Sign In
+  static bool _isSigningIn = false;
 
   @override
   Widget build(BuildContext context) {
@@ -40,16 +44,43 @@ class AuthPage extends StatelessWidget {
       return digest.toString();
     }
 
+    Map<String, dynamic> _decodeJwtPayload(String jwt) {
+      final parts = jwt.split('.');
+      if (parts.length != 3) throw Exception('invalid token');
+      String normalized = base64Url.normalize(parts[1]);
+      final payload = utf8.decode(base64Url.decode(normalized));
+      return json.decode(payload) as Map<String, dynamic>;
+    }
+
     Future<void> signWithApple() async {
-      HapticFeedback.mediumImpact();
+      // Защита от двойного старта
+      if (_isSigningIn) return;
+      _isSigningIn = true;
+
       try {
+        HapticFeedback.mediumImpact();
+        print('🍎 Apple Sign-In: Starting authentication...');
+
+        // Проверяем bundle ID в рантайме
+        final info = await PackageInfo.fromPlatform();
+        print('📦 Running bundle id: ${info.packageName}');
+        print('🍎 Apple Sign-In: Expected Bundle ID: app.twin.finder');
+
+        // Проверяем опции Firebase
+        final opts = FirebaseAuth.instance.app.options;
+        print('🔥 Firebase options check:');
+        print('  projectId: ${opts.projectId}');
+        print('  appId:     ${opts.appId}');
+        print('  apiKey:    ${opts.apiKey}');
+        print('  gcmSender: ${opts.messagingSenderId}');
+
         // Check Apple Sign-In availability
         bool isAvailable;
         try {
           isAvailable = await SignInWithApple.isAvailable();
-          print('Apple Sign-In available: $isAvailable');
+          print('🍎 Apple Sign-In available: $isAvailable');
         } catch (e) {
-          print('Error checking Apple Sign-In availability: $e');
+          print('🍎 Apple Sign-In availability check error: $e');
           isAvailable = false;
         }
 
@@ -64,16 +95,20 @@ class AuthPage extends StatelessWidget {
         }
 
         final rawNonce = generateNonce();
-        final nonce = sha256OfString(rawNonce);
+        final hashedNonce = sha256OfString(rawNonce);
+
+        print('🍎 Apple Sign-In: Raw Nonce: $rawNonce');
+        print('🍎 Apple Sign-In: Hashed Nonce: $hashedNonce');
 
         AuthorizationCredentialAppleID credential;
         try {
+          // 1) Запрос у Apple — передаем ИМЕННО HASH (для iOS)
           credential = await SignInWithApple.getAppleIDCredential(
             scopes: [
               AppleIDAuthorizationScopes.email,
               AppleIDAuthorizationScopes.fullName,
             ],
-            nonce: nonce,
+            nonce: hashedNonce, // <-- ключевой момент: передаем хешированный
           );
         } catch (appleError) {
           print('Apple Sign-In error details: $appleError');
@@ -138,26 +173,54 @@ class AuthPage extends StatelessWidget {
           );
           return;
         }
+        // 2) Диагностика: проверяем, что Apple вернул SHA256(rawNonce) в payload
+        final payload = _decodeJwtPayload(credential.identityToken!);
+        final tokenNonce = payload['nonce'];
+        final shouldBe = hashedNonce;
 
+        print(
+          '🍎 Nonce diag: token=$tokenNonce expected=$shouldBe match=${tokenNonce == shouldBe}',
+        );
+
+        if (tokenNonce != shouldBe) {
+          // не вызываем Firebase — это гарантированный invalid-credential
+          ErrorHandler.showError(
+            context,
+            'Apple вернул некорректный nonce. Повторите попытку.',
+            title: 'Apple Sign-In',
+          );
+          return;
+        }
+
+        print('Apple JWT payload: $payload');
         print('Apple Sign-In success:');
         print('  - User ID: ${credential.userIdentifier}');
         print('  - Email: ${credential.email ?? "not provided"}');
         print('  - Given Name: ${credential.givenName ?? "not provided"}');
         print('  - Family Name: ${credential.familyName ?? "not provided"}');
         print('  - Identity Token length: ${credential.identityToken!.length}');
-        print(
-          '  - Authorization Code: ${credential.authorizationCode ?? "not provided"}',
-        );
-        print('  - Raw Nonce: $rawNonce');
-        print('  - Hashed Nonce: $nonce');
+        print('  - Authorization Code: ${credential.authorizationCode}');
 
         try {
-          print('Creating Firebase OAuth credential...');
+          print('🍎 Apple Sign-In: Creating Firebase OAuth credential...');
+          print(
+            '🍎 Apple Sign-In: Identity Token length: ${credential.identityToken!.length}',
+          );
+          print('🍎 Apple Sign-In: Raw Nonce: $rawNonce');
+
+          // 3) Firebase — передаем RAW nonce
           final oauthCredential = OAuthProvider(
             'apple.com',
           ).credential(idToken: credential.identityToken, rawNonce: rawNonce);
 
-          print('Signing in with Firebase...');
+          print('🍎 Apple Sign-In: Signing in with Firebase...');
+          print(
+            '🍎 Apple Sign-In: Firebase project ID: ${FirebaseAuth.instance.app.options.projectId}',
+          );
+          print(
+            '🍎 Apple Sign-In: Firebase app name: ${FirebaseAuth.instance.app.name}',
+          );
+
           final userCred = await FirebaseAuth.instance.signInWithCredential(
             oauthCredential,
           );
@@ -197,14 +260,13 @@ class AuthPage extends StatelessWidget {
               '  - Identity Token: ${credential.identityToken?.substring(0, 50)}...',
             );
             print('  - Raw Nonce: $rawNonce');
-            print('  - Hashed Nonce: $nonce');
             print('  - User ID: ${credential.userIdentifier}');
             print('  - Authorization Code: ${credential.authorizationCode}');
 
             // Проверяем, что nonce совпадает
             final expectedNonce = sha256OfString(rawNonce);
             print('  - Expected nonce: $expectedNonce');
-            print('  - Nonce match: ${expectedNonce == nonce}');
+            print('  - Raw nonce: $rawNonce');
           }
 
           ErrorHandler.showError(
@@ -232,40 +294,86 @@ class AuthPage extends StatelessWidget {
             title: 'Apple Sign-In',
           );
         }
+      } finally {
+        // Сброс флага защиты от двойного старта
+        _isSigningIn = false;
       }
     }
 
     Future<void> signInWithGoogle() async {
       HapticFeedback.mediumImpact();
       try {
-        const List<String> scopes = <String>['email'];
+        print('🔍 Google Sign-In: Starting authentication...');
 
+        const List<String> scopes = <String>['email'];
         final GoogleSignIn googleSignIn = GoogleSignIn(scopes: scopes);
 
+        print('🔍 Google Sign-In: Calling signIn()...');
         final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
-        if (googleUser == null) return;
 
+        if (googleUser == null) {
+          print('🔍 Google Sign-In: User cancelled or returned null');
+          return;
+        }
+
+        print('🔍 Google Sign-In: User obtained:');
+        print('  - Email: ${googleUser.email}');
+        print('  - Display Name: ${googleUser.displayName}');
+        print('  - ID: ${googleUser.id}');
+
+        print('🔍 Google Sign-In: Getting authentication...');
         final GoogleSignInAuthentication googleAuth =
             await googleUser.authentication;
 
+        print('🔍 Google Sign-In: Authentication obtained:');
+        print(
+          '  - Access Token: ${googleAuth.accessToken?.substring(0, 20)}...',
+        );
+        print('  - ID Token: ${googleAuth.idToken?.substring(0, 20)}...');
+
+        print('🔍 Google Sign-In: Creating Firebase credential...');
         final credential = GoogleAuthProvider.credential(
           accessToken: googleAuth.accessToken,
           idToken: googleAuth.idToken,
         );
+
+        print('🔍 Google Sign-In: Signing in with Firebase...');
         final userCred = await FirebaseAuth.instance.signInWithCredential(
           credential,
         );
 
+        print('🔍 Google Sign-In: Firebase sign-in successful:');
+        print('  - Firebase UID: ${userCred.user?.uid}');
+        print('  - Firebase Email: ${userCred.user?.email}');
+        print('  - Firebase Display Name: ${userCred.user?.displayName}');
+
+        print('🔍 Google Sign-In: Getting Firebase ID token...');
         final firebaseIdToken = await userCred.user!.getIdToken(true);
 
         if (firebaseIdToken == null || firebaseIdToken.isEmpty) {
           throw Exception('Failed to get Firebase ID token');
         }
 
+        print(
+          '🔍 Google Sign-In: Firebase ID token obtained, length: ${firebaseIdToken.length}',
+        );
+
+        print('🔍 Google Sign-In: Calling AuthCubit.authGoogle...');
         // Call AuthCubit to handle Google authentication
-        context.read<AuthCubit>().authGoogle(firebaseIdToken);
+        if (context.mounted) {
+          context.read<AuthCubit>().authGoogle(firebaseIdToken);
+          print('🔍 Google Sign-In: Authentication completed successfully!');
+        } else {
+          print(
+            '🔍 Google Sign-In: Context not mounted, skipping AuthCubit call',
+          );
+        }
       } catch (e) {
-        print("Google Sign-In error: $e");
+        print('🔍 Google Sign-In error details:');
+        print('  - Error type: ${e.runtimeType}');
+        print('  - Error message: $e');
+        print('  - Stack trace: ${StackTrace.current}');
+
         // Show error to user
         ErrorHandler.showError(
           context,

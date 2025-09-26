@@ -169,10 +169,10 @@ class _BirthPageState extends State<BirthPage> {
                                               ? DateTime.tryParse(
                                                       birthController.text,
                                                     ) ??
-                                                    getMaximumBirthDate()
-                                              : getMaximumBirthDate(),
-                                          maximumDate: getMaximumBirthDate(),
-                                          minimumDate: getMinimumBirthDate(),
+                                                    DateTime.now()
+                                              : DateTime.now(),
+                                          maximumDate:
+                                              DateTime.now(), // Нельзя выбрать дату в будущем
                                           onDateTimeChanged: (date) {
                                             selectedDate = date;
                                             // birthController.text =
@@ -282,18 +282,22 @@ class _BirthPageState extends State<BirthPage> {
                       });
                     }
 
+                    // Проверяем, есть ли дата для продолжения
+                    final hasDate =
+                        birthController.text.isNotEmpty && selectedDate != null;
+
                     return GestureDetector(
-                      onTap: isLoading
+                      onTap: isLoading || !hasDate
                           ? null
                           : () async {
                               if (birthController.text.isNotEmpty &&
                                   selectedDate != null) {
-                                // Проверяем минимальный возраст
+                                // Проверяем минимальный возраст (дополнительная проверка)
                                 if (!isMinimumAgeReached(selectedDate!)) {
                                   ErrorHandler.showError(
                                     context,
-                                    L.ageRequirement(context),
-                                    title: L.error(context),
+                                    'You must be at least 18 years old to continue',
+                                    title: 'Age Requirement',
                                   );
                                   return;
                                 }
@@ -339,9 +343,7 @@ class _BirthPageState extends State<BirthPage> {
                         height: 56,
                         width: 216,
                         decoration: BoxDecoration(
-                          color:
-                              (birthController.text.isNotEmpty &&
-                                  selectedDate != null)
+                          color: hasDate
                               ? AppColors.button
                               : AppColors.button.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(30),
@@ -363,9 +365,7 @@ class _BirthPageState extends State<BirthPage> {
                                   style: TextStyle(
                                     fontSize: 20,
                                     fontWeight: FontWeight.bold,
-                                    color:
-                                        (birthController.text.isNotEmpty &&
-                                            selectedDate != null)
+                                    color: hasDate
                                         ? AppColors.white
                                         : AppColors.white.withValues(
                                             alpha: 0.4,

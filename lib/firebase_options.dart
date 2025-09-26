@@ -60,18 +60,18 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyAh1UhZEk6U9om1fnXMitQJCK8Osqta_OE',
-    appId: '1:773404912680:ios:ab7377ab81beb2183ed91d',
+    appId: '1:773404912680:ios:76c71c9bf3d148ff3ed91d',
     messagingSenderId: '773404912680',
     projectId: 'twin-finder-bb4ac',
     storageBucket: 'twin-finder-bb4ac.firebasestorage.app',
     androidClientId: '773404912680-nc75ggos52okapgo830akl4pnakt83hs.apps.googleusercontent.com',
-    iosClientId: '773404912680-hbjs9mr5gtdj0id4cs6c8012aebuk00t.apps.googleusercontent.com',
-    iosBundleId: 'com.twin.finder',
+    iosClientId: '773404912680-594f0rmf4nfj1g8cp3m2k8jogo8d2s07.apps.googleusercontent.com',
+    iosBundleId: 'app.twin.finder',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
     apiKey: 'AIzaSyAh1UhZEk6U9om1fnXMitQJCK8Osqta_OE',
-    appId: '1:773404912680:ios:f2b94e8a8beacae73ed91d',
+    appId: '1:773404912680:ios:478b6b21e7c54c233ed91d',
     messagingSenderId: '773404912680',
     projectId: 'twin-finder-bb4ac',
     storageBucket: 'twin-finder-bb4ac.firebasestorage.app',
