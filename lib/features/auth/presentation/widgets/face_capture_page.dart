@@ -131,8 +131,12 @@ class _FaceCapturePageState extends State<FaceCapturePage>
       // await _controller?.pausePreview();
 
       // Подготовим изображение: фиксируем EXIF ориентацию, размораживаем зеркальность фронталки и кодируем JPEG
-      final isFront = _controller!.description.lensDirection == CameraLensDirection.front;
-      final processedFile = await _preparePhotoForUpload(File(file.path), flipHorizontal: isFront);
+      final isFront =
+          _controller!.description.lensDirection == CameraLensDirection.front;
+      final processedFile = await _preparePhotoForUpload(
+        File(file.path),
+        flipHorizontal: isFront,
+      );
 
       // Загружаем фотографию на сервер (уже корректное JPEG)
       await context.read<AuthCubit>().uploadPhoto(processedFile);
@@ -152,7 +156,8 @@ class _FaceCapturePageState extends State<FaceCapturePage>
           msg = 'Move closer and center your face inside the frame.';
         } else if (msg.toLowerCase().contains('profile not completed')) {
           title = 'Complete profile first';
-          msg = 'Please fill in name, birthday, gender, country and city before uploading.';
+          msg =
+              'Please fill in name, birthday, gender, country and city before uploading.';
         } else if (msg.toLowerCase().contains('invalid photo')) {
           title = 'Invalid photo';
           msg = 'Make sure your face is clearly visible and well lit.';
@@ -168,7 +173,7 @@ class _FaceCapturePageState extends State<FaceCapturePage>
         }
 
         ErrorHandler.showError(context, msg, title: title);
-        
+
         // Возвращаемся к live режиму при ошибке
         setState(() {
           _phase = _Phase.live;
@@ -206,7 +211,8 @@ class _FaceCapturePageState extends State<FaceCapturePage>
 
     // Пишем рядом с оригиналом, чтобы не тянуть path_provider
     final dirPath = inputFile.parent.path;
-    final outPath = '$dirPath/processed_${DateTime.now().millisecondsSinceEpoch}.jpg';
+    final outPath =
+        '$dirPath/processed_${DateTime.now().millisecondsSinceEpoch}.jpg';
     final outFile = File(outPath);
     await outFile.writeAsBytes(jpg, flush: true);
     return outFile;
@@ -410,7 +416,7 @@ class _CameraWithMask extends StatelessWidget {
                   : 0.0,
               duration: const Duration(milliseconds: 1000),
               child: Image.asset(
-                'assets/images/subtract.png',
+                'assets/images/subsctract_2.png',
                 fit: BoxFit.cover,
               ),
             ),
