@@ -158,7 +158,7 @@ class LocalizationStrings {
     'please_select_country': 'Please select your country',
 
     // Face capture
-    'take_photo': 'Take Photo',
+    'take_photo': 'Place your face in the frame',
     'retake_photo': 'Retake Photo',
     'photo_captured': 'Photo captured successfully',
     'camera_permission_required': 'Camera permission is required',
