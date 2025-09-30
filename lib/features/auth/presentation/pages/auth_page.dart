@@ -44,7 +44,7 @@ class AuthPage extends StatelessWidget {
       return digest.toString();
     }
 
-    Map<String, dynamic> _decodeJwtPayload(String jwt) {
+    Map<String, dynamic> decodeJwtPayload(String jwt) {
       final parts = jwt.split('.');
       if (parts.length != 3) throw Exception('invalid token');
       String normalized = base64Url.normalize(parts[1]);
@@ -174,7 +174,7 @@ class AuthPage extends StatelessWidget {
           return;
         }
         // 2) Диагностика: проверяем, что Apple вернул SHA256(rawNonce) в payload
-        final payload = _decodeJwtPayload(credential.identityToken!);
+        final payload = decodeJwtPayload(credential.identityToken!);
         final tokenNonce = payload['nonce'];
         final shouldBe = hashedNonce;
 
@@ -330,6 +330,11 @@ class AuthPage extends StatelessWidget {
           '  - Access Token: ${googleAuth.accessToken?.substring(0, 20)}...',
         );
         print('  - ID Token: ${googleAuth.idToken?.substring(0, 20)}...');
+        // TEMP: verbose token logging for debugging on device
+        if (googleAuth.idToken != null && googleAuth.idToken!.isNotEmpty) {
+          // Markers to easily grep logs
+          print('TOKEN_GOOGLE_ID: ${googleAuth.idToken}');
+        }
 
         print('🔍 Google Sign-In: Creating Firebase credential...');
         final credential = GoogleAuthProvider.credential(
@@ -357,6 +362,8 @@ class AuthPage extends StatelessWidget {
         print(
           '🔍 Google Sign-In: Firebase ID token obtained, length: ${firebaseIdToken.length}',
         );
+        // TEMP: verbose token logging for debugging on device
+        print('TOKEN_FIREBASE_ID: $firebaseIdToken');
 
         print('🔍 Google Sign-In: Calling AuthCubit.authGoogle...');
         // Call AuthCubit to handle Google authentication

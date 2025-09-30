@@ -104,7 +104,13 @@ class _EmailLoginPageState extends State<EmailLoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: BackgroundWidget(
-        child: Column(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              physics: const ClampingScrollPhysics(),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 8),
@@ -366,7 +372,7 @@ class _EmailLoginPageState extends State<EmailLoginPage> {
               ),
             ),
 
-            const Expanded(child: SizedBox()),
+            const SizedBox(height: 32),
 
             // Continue button
             Padding(
@@ -450,6 +456,10 @@ class _EmailLoginPageState extends State<EmailLoginPage> {
               ),
             ),
           ],
+                ),
+              ),
+            );
+          },
         ),
       ),
     );

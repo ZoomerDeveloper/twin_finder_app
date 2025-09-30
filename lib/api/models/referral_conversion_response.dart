@@ -13,9 +13,9 @@ class ReferralConversionResponse {
     required this.success,
     required this.message,
   });
-  
+
   factory ReferralConversionResponse.fromJson(Map<String, Object?> json) => _$ReferralConversionResponseFromJson(json);
-  
+
   /// Whether conversion was successful
   final bool success;
 

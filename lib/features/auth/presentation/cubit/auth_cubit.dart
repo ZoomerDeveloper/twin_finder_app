@@ -6,7 +6,7 @@ import 'dart:io';
 import 'package:twin_finder/api/models/apple_login_request.dart';
 import 'package:twin_finder/api/models/google_login_request.dart';
 import 'package:twin_finder/api/models/user_profile_response.dart';
-import 'package:twin_finder/api/models/photo_upload_response.dart';
+import 'package:twin_finder/api/models/photo_response.dart';
 import 'package:twin_finder/core/errors/api_error.dart';
 import 'package:twin_finder/core/utils/error_handler.dart';
 import 'package:twin_finder/features/auth/presentation/repository/auth_repository.dart';
@@ -385,7 +385,7 @@ class AuthCubit extends Cubit<AuthState> {
     try {
       debugPrint('Starting photo upload...');
       final response = await repo.uploadPhoto(photoFile);
-      debugPrint('Photo upload successful: ${response.data.id}');
+      debugPrint('Photo upload successful: ${response.id}');
       // Photo uploaded successfully, emit success state
       emit(AuthPhotoUploaded(response));
 

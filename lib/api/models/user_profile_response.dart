@@ -16,9 +16,9 @@ class UserProfileResponse {
     required this.message,
     required this.data,
   });
-  
+
   factory UserProfileResponse.fromJson(Map<String, Object?> json) => _$UserProfileResponseFromJson(json);
-  
+
   /// Operation success status
   final bool success;
 

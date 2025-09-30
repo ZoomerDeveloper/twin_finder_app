@@ -40,7 +40,7 @@ app.twin.finder.service
 
 **Key ID:**
 ```
-QKSHS6D2RP
+XT5P4Z9W96
 ```
 
 **Private key:**
@@ -64,7 +64,7 @@ QKSHS6D2RP
 - Найдите в Apple Developer Console → Membership
 
 ### 3. Неправильный Key ID
-- Должен быть `QKSHS6D2RP`
+- Должен быть `XT5P4Z9W96`
 - Без пробелов, точное совпадение
 
 ### 4. Проблема с приватным ключом

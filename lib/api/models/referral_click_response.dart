@@ -16,11 +16,14 @@ class ReferralClickResponse {
     this.appStoreUrl,
     this.platform,
   });
-  
+
   factory ReferralClickResponse.fromJson(Map<String, Object?> json) => _$ReferralClickResponseFromJson(json);
-  
+
   /// Whether tracking was successful
   final bool success;
+
+  /// Response message
+  final String message;
 
   /// ID of the created referral record
   @JsonKey(name: 'referral_id')
@@ -32,9 +35,6 @@ class ReferralClickResponse {
 
   /// Detected platform (ios, android, web)
   final String? platform;
-
-  /// Response message
-  final String message;
 
   Map<String, Object?> toJson() => _$ReferralClickResponseToJson(this);
 }

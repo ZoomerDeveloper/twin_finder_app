@@ -16,9 +16,9 @@ class BasicMessageResponse {
     required this.success,
     required this.message,
   });
-  
+
   factory BasicMessageResponse.fromJson(Map<String, Object?> json) => _$BasicMessageResponseFromJson(json);
-  
+
   /// Whether the operation succeeded
   final bool success;
 

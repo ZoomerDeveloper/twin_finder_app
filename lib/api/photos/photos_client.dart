@@ -7,8 +7,8 @@ import 'package:dio/dio.dart';
 import 'package:retrofit/retrofit.dart';
 
 import '../models/photo_delete_response.dart';
+import '../models/photo_detail_response.dart';
 import '../models/photo_response.dart';
-import '../models/photo_upload_response.dart';
 
 part 'photos_client.g.dart';
 
@@ -16,12 +16,12 @@ part 'photos_client.g.dart';
 abstract class PhotosClient {
   factory PhotosClient(Dio dio, {String? baseUrl}) = _PhotosClient;
 
-  /// Upload Photo.
+  /// Upload photo (background processing).
   ///
-  /// Upload a new photo for the current user.
+  /// Uploads a single user photo. Embedding and neural matches are computed asynchronously in the background after upload.
   @MultiPart()
   @POST('/api/v1/photos/upload')
-  Future<PhotoUploadResponse> uploadPhotoApiV1PhotosUploadPost({
+  Future<PhotoResponse> uploadPhotoApiV1PhotosUploadPost({
     @Part(name: 'file') required MultipartFile file,
     @Query('token') String? token,
     @Extras() Map<String, dynamic>? extras,
@@ -32,7 +32,7 @@ abstract class PhotosClient {
   ///
   /// Get a photo by ID for the current user.
   @GET('/api/v1/photos/{photo_id}')
-  Future<PhotoResponse> getPhotoApiV1PhotosPhotoIdGet({
+  Future<PhotoDetailResponse> getPhotoApiV1PhotosPhotoIdGet({
     @Path('photo_id') required String photoId,
     @Query('token') String? token,
     @Extras() Map<String, dynamic>? extras,

@@ -14,9 +14,9 @@ class TokenBlacklistResponse {
     required this.message,
     this.blacklistedAt,
   });
-  
+
   factory TokenBlacklistResponse.fromJson(Map<String, Object?> json) => _$TokenBlacklistResponseFromJson(json);
-  
+
   /// Operation success status
   final bool success;
 

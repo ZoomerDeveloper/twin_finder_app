@@ -26,6 +26,14 @@ abstract class FallbackClient {
     @DioOptions() RequestOptions? options,
   });
 
+  /// Redirect Legacy Uploads
+  @GET('/app/uploads/{path}')
+  Future<void> redirectLegacyUploadsAppUploadsPathGet({
+    @Path('path') required String path,
+    @Extras() Map<String, dynamic>? extras,
+    @DioOptions() RequestOptions? options,
+  });
+
   /// Health Check.
   ///
   /// Health check endpoint for monitoring API status and performance.

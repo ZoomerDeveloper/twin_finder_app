@@ -62,7 +62,7 @@ final class AuthProfileUpdateFailed extends AuthState {
 }
 
 final class AuthPhotoUploaded extends AuthState {
-  final PhotoUploadResponse response;
+  final PhotoResponse response;
   AuthPhotoUploaded(this.response);
   @override
   List<Object?> get props => [response];

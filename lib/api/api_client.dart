@@ -11,6 +11,7 @@ import 'photos/photos_client.dart';
 import 'matches/matches_client.dart';
 import 'referral/referral_client.dart';
 import 'locations/locations_client.dart';
+import 'system/system_client.dart';
 import 'admin/admin_client.dart';
 
 /// TwinFinder API `v1.0.0`.
@@ -41,6 +42,7 @@ class ApiClient {
   MatchesClient? _matches;
   ReferralClient? _referral;
   LocationsClient? _locations;
+  SystemClient? _system;
   AdminClient? _admin;
 
   FallbackClient get fallback => _fallback ??= FallbackClient(_dio, baseUrl: _baseUrl);
@@ -56,6 +58,8 @@ class ApiClient {
   ReferralClient get referral => _referral ??= ReferralClient(_dio, baseUrl: _baseUrl);
 
   LocationsClient get locations => _locations ??= LocationsClient(_dio, baseUrl: _baseUrl);
+
+  SystemClient get system => _system ??= SystemClient(_dio, baseUrl: _baseUrl);
 
   AdminClient get admin => _admin ??= AdminClient(_dio, baseUrl: _baseUrl);
 }

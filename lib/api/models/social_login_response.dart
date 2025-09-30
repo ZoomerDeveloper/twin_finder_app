@@ -18,9 +18,9 @@ class SocialLoginResponse {
     this.data,
     this.userInfo,
   });
-  
+
   factory SocialLoginResponse.fromJson(Map<String, Object?> json) => _$SocialLoginResponseFromJson(json);
-  
+
   /// Operation success status
   final bool success;
 

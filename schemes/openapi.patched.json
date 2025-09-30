@@ -16,8 +16,43 @@
             "description": "API information including version and documentation links",
             "content": {
               "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/app/uploads/{path}": {
+      "get": {
+        "summary": "Redirect Legacy Uploads",
+        "operationId": "redirect_legacy_uploads_app_uploads__path__get",
+        "parameters": [
+          {
+            "name": "path",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Path"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
                 "schema": {
-
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -35,9 +70,7 @@
             "description": "Health status including API version and environment",
             "content": {
               "application/json": {
-                "schema": {
-
-                }
+                "schema": {}
               }
             }
           }
@@ -54,9 +87,7 @@
             "description": "Detailed health status including all system components",
             "content": {
               "application/json": {
-                "schema": {
-
-                }
+                "schema": {}
               }
             }
           }
@@ -73,9 +104,7 @@
             "description": "Prometheus-formatted metrics",
             "content": {
               "application/json": {
-                "schema": {
-
-                }
+                "schema": {}
               }
             }
           }
@@ -1342,8 +1371,8 @@
         "tags": [
           "photos"
         ],
-        "summary": "Upload Photo",
-        "description": "Upload a new photo for the current user.",
+        "summary": "Upload photo (background processing)",
+        "description": "Uploads a single user photo. Embedding and neural matches are computed asynchronously in the background after upload.",
         "operationId": "upload_photo_api_v1_photos_upload_post",
         "parameters": [
           {
@@ -1438,7 +1467,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PhotoResponse"
+                  "$ref": "#/components/schemas/PhotoDetailResponse"
                 }
               }
             }
@@ -1549,6 +1578,84 @@
             }
           }
         },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MatchGenerationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/matches/generate/neural": {
+      "post": {
+        "tags": [
+          "matches"
+        ],
+        "summary": "Generate neural network matches",
+        "description": "Generate matches using neural network face similarity search.",
+        "operationId": "generate_neural_network_matches_api_v1_matches_generate_neural_post",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 20,
+              "minimum": 1,
+              "description": "Number of matches to generate",
+              "default": 5,
+              "title": "Limit"
+            },
+            "description": "Number of matches to generate"
+          },
+          {
+            "name": "min_similarity",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "description": "Minimum similarity threshold",
+              "default": 0.3,
+              "title": "Min Similarity"
+            },
+            "description": "Minimum similarity threshold"
+          },
+          {
+            "name": "token",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Token"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -2060,9 +2167,7 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {
-
-                }
+                "schema": {}
               }
             }
           },
@@ -2220,9 +2325,55 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
                 "schema": {
-
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/matches/recompute": {
+      "post": {
+        "tags": [
+          "matches"
+        ],
+        "summary": "Recompute similarity scores for current user",
+        "description": "Recompute similarity scores for all matches involving the current user (both directions).",
+        "operationId": "recompute_matches_for_current_user_api_v1_matches_recompute_post",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
               }
             }
           },
@@ -2752,7 +2903,7 @@
               "application/json": {
                 "schema": {
                   "items": {
-                    "$ref": "#/components/schemas/app__schemas__share__SocialPlatformInfo"
+                    "$ref": "#/components/schemas/twin_finder__schemas__share__SocialPlatformInfo"
                   },
                   "type": "array",
                   "title": "Response Get Supported Platforms Api V1 Share Platforms Get"
@@ -2992,9 +3143,7 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {
-
-                }
+                "schema": {}
               }
             }
           },
@@ -3543,6 +3692,46 @@
         }
       }
     },
+    "/api/v1/system/ml-health": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "ML & Vector health",
+        "description": "Status of ONNX embedding model and ChromaDB connectivity.",
+        "operationId": "ml_health_api_v1_system_ml_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/system/debug/chromadb": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Debug ChromaDB",
+        "description": "Debug endpoint to inspect ChromaDB embeddings and metadata.",
+        "operationId": "debug_chromadb_api_v1_system_debug_chromadb_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/admin/login": {
       "post": {
         "tags": [
@@ -3650,9 +3839,7 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {
-
-                }
+                "schema": {}
               }
             }
           },
@@ -3760,9 +3947,7 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {
-
-                }
+                "schema": {}
               }
             }
           },
@@ -4128,9 +4313,7 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {
-
-                }
+                "schema": {}
               }
             }
           },
@@ -4197,9 +4380,7 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {
-
-                }
+                "schema": {}
               }
             }
           },
@@ -4581,9 +4762,7 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {
-
-                }
+                "schema": {}
               }
             }
           },
@@ -4650,9 +4829,7 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {
-
-                }
+                "schema": {}
               }
             }
           },
@@ -4882,8 +5059,8 @@
               "anyOf": [
                 {
                   "type": "number",
-                  "maximum": 1,
-                  "minimum": 0
+                  "maximum": 1.0,
+                  "minimum": 0.0
                 },
                 {
                   "type": "null"
@@ -4902,8 +5079,8 @@
               "anyOf": [
                 {
                   "type": "number",
-                  "maximum": 1,
-                  "minimum": 0
+                  "maximum": 1.0,
+                  "minimum": 0.0
                 },
                 {
                   "type": "null"
@@ -5177,9 +5354,7 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {
-
-                }
+                "schema": {}
               }
             }
           },
@@ -5440,9 +5615,7 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {
-
-                }
+                "schema": {}
               }
             }
           },
@@ -5723,8 +5896,8 @@
             "anyOf": [
               {
                 "type": "number",
-                "maximum": 1,
-                "minimum": 0
+                "maximum": 1.0,
+                "minimum": 0.0
               },
               {
                 "type": "null"
@@ -5897,8 +6070,8 @@
             "anyOf": [
               {
                 "type": "integer",
-                "maximum": 365,
-                "minimum": 1
+                "maximum": 365.0,
+                "minimum": 1.0
               },
               {
                 "type": "null"
@@ -6289,7 +6462,14 @@
             "example": true
           },
           "message": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Message",
             "description": "Human-readable message describing the operation result",
             "example": "Login successful"
@@ -6314,8 +6494,7 @@
         },
         "type": "object",
         "required": [
-          "success",
-          "message"
+          "success"
         ],
         "title": "AuthResponse",
         "description": "Authentication response schema.\n\nStandard response format for all authentication endpoints. Provides consistent\nstructure for success/failure status, user-friendly messages, and optional\ntoken data for successful operations.\n\n**Response Structure:**\n- success: Boolean indicating if the operation succeeded\n- message: Human-readable message describing the result\n- data: Optional token data (only present for successful auth operations)\n\n**Usage:**\n- All auth endpoints return this consistent format\n- Check success field to determine operation result\n- Use message for user feedback\n- Access token data when success is true"
@@ -6329,7 +6508,14 @@
             "example": true
           },
           "message": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Message",
             "description": "Human-readable message",
             "example": "Verification code sent to your email."
@@ -6337,8 +6523,7 @@
         },
         "type": "object",
         "required": [
-          "success",
-          "message"
+          "success"
         ],
         "title": "BasicMessageResponse",
         "description": "Simple response schema without token data.\n\nUse for endpoints like registration initiation that should not expose\nany authentication tokens in responses."
@@ -6402,8 +6587,8 @@
             "anyOf": [
               {
                 "type": "integer",
-                "maximum": 365,
-                "minimum": 1
+                "maximum": 365.0,
+                "minimum": 1.0
               },
               {
                 "type": "null"
@@ -6796,6 +6981,69 @@
         "title": "EmailVerificationRequest",
         "description": "Email verification request schema."
       },
+      "EmptyData": {
+        "properties": {},
+        "type": "object",
+        "title": "EmptyData",
+        "description": "Placeholder model for responses that do not return data."
+      },
+      "ErrorDetail": {
+        "properties": {
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message",
+            "description": "Human-friendly description of the problem.",
+            "example": null
+          },
+          "code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code",
+            "description": "Machine-friendly error code for programmatic handling."
+          },
+          "field": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Field",
+            "description": "Related request field when the error is field-specific."
+          },
+          "help": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Help",
+            "description": "Optional hint to help the client resolve the issue."
+          }
+        },
+        "type": "object",
+        "required": [],
+        "title": "ErrorDetail",
+        "description": "Machine and human readable error information."
+      },
       "GoogleLoginRequest": {
         "properties": {
           "id_token": {
@@ -6971,8 +7219,8 @@
         "properties": {
           "count": {
             "type": "integer",
-            "maximum": 50,
-            "minimum": 1,
+            "maximum": 50.0,
+            "minimum": 1.0,
             "title": "Count",
             "description": "Number of matches to generate (1-50)",
             "default": 10
@@ -7025,16 +7273,23 @@
             "description": "Total matches for the user"
           },
           "message": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Message",
-            "description": "Generation status message"
+            "description": "Generation status message",
+            "example": null
           }
         },
         "type": "object",
         "required": [
           "generated_count",
-          "total_matches",
-          "message"
+          "total_matches"
         ],
         "title": "MatchGenerationResponse",
         "description": "Schema for match generation response."
@@ -7418,19 +7673,121 @@
         "properties": {
           "success": {
             "type": "boolean",
-            "title": "Success"
+            "title": "Success",
+            "description": "Whether the request completed successfully."
           },
           "message": {
-            "type": "string",
-            "title": "Message"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message",
+            "description": "Primary message suitable for end users.",
+            "example": null
+          },
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EmptyData"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Deletion responses do not carry payload data."
+          },
+          "errors": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ErrorDetail"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Errors",
+            "description": "Detailed errors when the request fails."
+          },
+          "meta": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ResponseMeta"
+              }
+            ],
+            "description": "Diagnostic metadata accompanying the response."
+          }
+        },
+        "type": "object",
+        "required": [
+          "success"
+        ],
+        "title": "PhotoDeleteResponse"
+      },
+      "PhotoDetailResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "description": "Whether the request completed successfully."
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message",
+            "description": "Primary message suitable for end users.",
+            "example": null
+          },
+          "data": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PhotoResponse"
+              }
+            ],
+            "description": "Requested photo metadata."
+          },
+          "errors": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ErrorDetail"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Errors",
+            "description": "Detailed errors when the request fails."
+          },
+          "meta": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ResponseMeta"
+              }
+            ],
+            "description": "Diagnostic metadata accompanying the response."
           }
         },
         "type": "object",
         "required": [
           "success",
-          "message"
+          "data"
         ],
-        "title": "PhotoDeleteResponse"
+        "title": "PhotoDetailResponse"
       },
       "PhotoResponse": {
         "properties": {
@@ -7502,20 +7859,57 @@
         "properties": {
           "success": {
             "type": "boolean",
-            "title": "Success"
+            "title": "Success",
+            "description": "Whether the request completed successfully."
           },
           "message": {
-            "type": "string",
-            "title": "Message"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message",
+            "description": "Primary message suitable for end users.",
+            "example": null
           },
           "data": {
-            "$ref": "#/components/schemas/PhotoResponse"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PhotoResponse"
+              }
+            ],
+            "description": "Saved photo metadata."
+          },
+          "errors": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ErrorDetail"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Errors",
+            "description": "Detailed errors when the request fails."
+          },
+          "meta": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ResponseMeta"
+              }
+            ],
+            "description": "Diagnostic metadata accompanying the response."
           }
         },
         "type": "object",
         "required": [
           "success",
-          "message",
           "data"
         ],
         "title": "PhotoUploadResponse"
@@ -7578,7 +7972,7 @@
           "metadata": {
             "allOf": [
               {
-                "$ref": "#/components/schemas/app__schemas__share__SocialPlatformInfo"
+                "$ref": "#/components/schemas/twin_finder__schemas__share__SocialPlatformInfo"
               }
             ],
             "description": "Platform metadata"
@@ -7785,15 +8179,22 @@
             "description": "Detected platform (ios, android, web)"
           },
           "message": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Message",
-            "description": "Response message"
+            "description": "Response message",
+            "example": null
           }
         },
         "type": "object",
         "required": [
-          "success",
-          "message"
+          "success"
         ],
         "title": "ReferralClickResponse",
         "description": "Response for referral click tracking."
@@ -7821,15 +8222,22 @@
             "description": "Whether the code is valid"
           },
           "message": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Message",
-            "description": "Validation message"
+            "description": "Validation message",
+            "example": null
           }
         },
         "type": "object",
         "required": [
-          "is_valid",
-          "message"
+          "is_valid"
         ],
         "title": "ReferralCodeValidationResponse",
         "description": "Response for referral code validation."
@@ -7863,15 +8271,22 @@
             "description": "Whether conversion was successful"
           },
           "message": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Message",
-            "description": "Response message"
+            "description": "Response message",
+            "example": null
           }
         },
         "type": "object",
         "required": [
-          "success",
-          "message"
+          "success"
         ],
         "title": "ReferralConversionResponse",
         "description": "Response for referral conversion."
@@ -7896,7 +8311,7 @@
           },
           "available_platforms": {
             "items": {
-              "$ref": "#/components/schemas/app__schemas__referral__SocialPlatformInfo"
+              "$ref": "#/components/schemas/twin_finder__schemas__referral__SocialPlatformInfo"
             },
             "type": "array",
             "title": "Available Platforms",
@@ -8172,6 +8587,67 @@
         "title": "RefreshTokenRequest",
         "description": "Refresh token request schema."
       },
+      "ResponseMeta": {
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timestamp",
+            "description": "UTC timestamp when the response was generated."
+          },
+          "path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Path",
+            "description": "Request path associated with the response."
+          },
+          "status_code": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status Code",
+            "description": "HTTP status code returned for the response."
+          },
+          "request_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Request Id",
+            "description": "Correlation identifier for the request, if available."
+          },
+          "extra": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Extra",
+            "description": "Additional metadata entries for debugging or auditing."
+          }
+        },
+        "type": "object",
+        "title": "ResponseMeta",
+        "description": "Metadata included with every API response."
+      },
       "ShareCardInfo": {
         "properties": {
           "user_id": {
@@ -8277,9 +8753,17 @@
             "description": "Whether generation was successful"
           },
           "message": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Message",
-            "description": "Response message"
+            "description": "Response message",
+            "example": null
           },
           "image_data": {
             "anyOf": [
@@ -8327,8 +8811,7 @@
         },
         "type": "object",
         "required": [
-          "success",
-          "message"
+          "success"
         ],
         "title": "ShareCardResponse",
         "description": "Response for share card generation."
@@ -8470,9 +8953,17 @@
             "description": "Operation success status"
           },
           "message": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Message",
-            "description": "Response message"
+            "description": "Response message",
+            "example": null
           },
           "data": {
             "anyOf": [
@@ -8506,8 +8997,7 @@
         },
         "type": "object",
         "required": [
-          "success",
-          "message"
+          "success"
         ],
         "title": "SocialLoginResponse",
         "description": "Social login response schema."
@@ -8584,9 +9074,17 @@
             "description": "Operation success status"
           },
           "message": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Message",
-            "description": "Response message"
+            "description": "Response message",
+            "example": null
           },
           "blacklisted_at": {
             "anyOf": [
@@ -8604,8 +9102,7 @@
         },
         "type": "object",
         "required": [
-          "success",
-          "message"
+          "success"
         ],
         "title": "TokenBlacklistResponse",
         "description": "Token blacklist response schema."
@@ -8945,9 +9442,17 @@
             "description": "Operation success status"
           },
           "message": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Message",
-            "description": "Human readable message"
+            "description": "Human readable message",
+            "example": null
           },
           "data": {
             "allOf": [
@@ -8961,7 +9466,6 @@
         "type": "object",
         "required": [
           "success",
-          "message",
           "data"
         ],
         "title": "UserProfileResponse",
@@ -9109,7 +9613,7 @@
         "title": "VerificationTokenResponse",
         "description": "Response carrying one-time verification token to set password."
       },
-      "app__schemas__referral__SocialPlatformInfo": {
+      "twin_finder__schemas__referral__SocialPlatformInfo": {
         "properties": {
           "platform": {
             "type": "string",
@@ -9154,7 +9658,7 @@
         "title": "SocialPlatformInfo",
         "description": "Information about social platforms."
       },
-      "app__schemas__share__SocialPlatformInfo": {
+      "twin_finder__schemas__share__SocialPlatformInfo": {
         "properties": {
           "platform": {
             "type": "string",
@@ -9209,7 +9713,7 @@
         "type": "http",
         "scheme": "bearer",
         "bearerFormat": "JWT",
-        "description": "Include access token: Authorization: Bearer \u003Ctoken\u003E"
+        "description": "Include access token: Authorization: Bearer <token>"
       }
     }
   },

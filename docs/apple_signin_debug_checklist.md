@@ -13,14 +13,14 @@ Apple Sign-In получает все данные от Apple, но Firebase в�
 - [ ] **Domains and Subdomains** добавлен: `twin-finder-bb4ac.firebaseapp.com`
 - [ ] **Return URLs** добавлен: `https://twin-finder-bb4ac.firebaseapp.com/__/auth/handler`
 - [ ] **Apple Sign In Key** создан и скачан (.p8 файл)
-- [ ] **Key ID** записан (например: QKSHS6D2RP)
+- [ ] **Key ID** записан (например: XT5P4Z9W96)
 - [ ] **Team ID** записан (например: 6DYQJ8T976)
 
 ### 2. Firebase Console
 - [ ] **Apple Sign-In** включен в Authentication > Sign-in method
 - [ ] **Service ID** указан: `app.twin.finder.service`
 - [ ] **Team ID** указан: `6DYQJ8T976`
-- [ ] **Key ID** указан: `QKSHS6D2RP`
+- [ ] **Key ID** указан: `XT5P4Z9W96`
 - [ ] **Private Key** загружен (содержимое .p8 файла)
 - [ ] **OAuth redirect URI** указан: `https://twin-finder-bb4ac.firebaseapp.com/__/auth/handler`
 

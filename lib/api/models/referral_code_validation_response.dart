@@ -13,9 +13,9 @@ class ReferralCodeValidationResponse {
     required this.isValid,
     required this.message,
   });
-  
+
   factory ReferralCodeValidationResponse.fromJson(Map<String, Object?> json) => _$ReferralCodeValidationResponseFromJson(json);
-  
+
   /// Whether the code is valid
   @JsonKey(name: 'is_valid')
   final bool isValid;

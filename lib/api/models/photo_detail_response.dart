@@ -4,32 +4,32 @@
 
 import 'package:json_annotation/json_annotation.dart';
 
-import 'empty_data.dart';
 import 'error_detail.dart';
+import 'photo_response.dart';
 import 'response_meta.dart';
 
-part 'photo_delete_response.g.dart';
+part 'photo_detail_response.g.dart';
 
 @JsonSerializable()
-class PhotoDeleteResponse {
-  const PhotoDeleteResponse({
+class PhotoDetailResponse {
+  const PhotoDetailResponse({
     required this.success,
-    required this.message,
-    this.data,
+    required this.data,
+    this.message,
     this.errors,
     this.meta,
   });
-
-  factory PhotoDeleteResponse.fromJson(Map<String, Object?> json) => _$PhotoDeleteResponseFromJson(json);
-
+  
+  factory PhotoDetailResponse.fromJson(Map<String, Object?> json) => _$PhotoDetailResponseFromJson(json);
+  
   /// Whether the request completed successfully.
   final bool success;
 
   /// Primary message suitable for end users.
-  final String message;
+  final String? message;
 
-  /// Deletion responses do not carry payload data.
-  final EmptyData? data;
+  /// Requested photo metadata.
+  final PhotoResponse data;
 
   /// Detailed errors when the request fails.
   final List<ErrorDetail>? errors;
@@ -37,5 +37,5 @@ class PhotoDeleteResponse {
   /// Diagnostic metadata accompanying the response.
   final ResponseMeta? meta;
 
-  Map<String, Object?> toJson() => _$PhotoDeleteResponseToJson(this);
+  Map<String, Object?> toJson() => _$PhotoDetailResponseToJson(this);
 }

@@ -30,6 +30,22 @@ abstract class MatchesClient {
     @DioOptions() RequestOptions? options,
   });
 
+  /// Generate neural network matches.
+  ///
+  /// Generate matches using neural network face similarity search.
+  ///
+  /// [limit] - Number of matches to generate.
+  ///
+  /// [minSimilarity] - Minimum similarity threshold.
+  @POST('/api/v1/matches/generate/neural')
+  Future<MatchGenerationResponse> generateNeuralNetworkMatchesApiV1MatchesGenerateNeuralPost({
+    @Query('token') String? token,
+    @Query('limit') int? limit = 5,
+    @Query('min_similarity') num? minSimilarity = 0.3,
+    @Extras() Map<String, dynamic>? extras,
+    @DioOptions() RequestOptions? options,
+  });
+
   /// Generate random matches.
   ///
   /// Generate random matches for the current user using a simple random algorithm. This is a placeholder for the neural network matching system.
@@ -40,8 +56,7 @@ abstract class MatchesClient {
   ///
   /// [maxSimilarity] - Maximum similarity score for generated matches.
   @POST('/api/v1/matches/generate/random')
-  Future<MatchGenerationResponse>
-  generateRandomMatchesApiV1MatchesGenerateRandomPost({
+  Future<MatchGenerationResponse> generateRandomMatchesApiV1MatchesGenerateRandomPost({
     @Query('min_similarity') dynamic minSimilarity,
     @Query('max_similarity') dynamic maxSimilarity,
     @Query('token') String? token,
@@ -66,8 +81,8 @@ abstract class MatchesClient {
   @GET('/api/v1/matches/')
   Future<MatchListResponse> getMatchesApiV1MatchesGet({
     @Query('viewed_only') bool? viewedOnly,
-    @Query('min_similarity') double? minSimilarity,
-    @Query('max_similarity') double? maxSimilarity,
+    @Query('min_similarity') dynamic minSimilarity,
+    @Query('max_similarity') dynamic maxSimilarity,
     @Query('token') String? token,
     @Query('page') int? page = 1,
     @Query('per_page') int? perPage = 20,
@@ -151,6 +166,16 @@ abstract class MatchesClient {
   /// Get the count of unviewed matches for the current user.
   @GET('/api/v1/matches/stats/unviewed-count')
   Future<void> getUnviewedCountApiV1MatchesStatsUnviewedCountGet({
+    @Query('token') String? token,
+    @Extras() Map<String, dynamic>? extras,
+    @DioOptions() RequestOptions? options,
+  });
+
+  /// Recompute similarity scores for current user.
+  ///
+  /// Recompute similarity scores for all matches involving the current user (both directions).
+  @POST('/api/v1/matches/recompute')
+  Future<void> recomputeMatchesForCurrentUserApiV1MatchesRecomputePost({
     @Query('token') String? token,
     @Extras() Map<String, dynamic>? extras,
     @DioOptions() RequestOptions? options,

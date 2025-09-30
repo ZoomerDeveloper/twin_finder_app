@@ -4,9 +4,9 @@
 
 import 'package:json_annotation/json_annotation.dart';
 
-import 'app_schemas_referral_social_platform_info.dart';
 import 'referral_history_item.dart';
 import 'referral_statistics_response.dart';
+import 'twin_finder_schemas_referral_social_platform_info.dart';
 
 part 'referral_dashboard_response.g.dart';
 
@@ -32,7 +32,7 @@ class ReferralDashboardResponse {
 
   /// Available social platforms
   @JsonKey(name: 'available_platforms')
-  final List<AppSchemasReferralSocialPlatformInfo> availablePlatforms;
+  final List<TwinFinderSchemasReferralSocialPlatformInfo> availablePlatforms;
 
   /// User's referral link
   @JsonKey(name: 'referral_link')

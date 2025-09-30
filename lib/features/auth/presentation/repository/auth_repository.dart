@@ -18,7 +18,7 @@ import 'package:twin_finder/api/models/social_login_response.dart';
 import 'dart:io';
 import 'package:twin_finder/api/models/user_profile_response.dart';
 import 'package:twin_finder/api/models/user_update.dart';
-import 'package:twin_finder/api/models/photo_upload_response.dart';
+import 'package:twin_finder/api/models/photo_response.dart';
 import 'package:twin_finder/core/errors/api_error.dart';
 import 'package:twin_finder/api/models/refresh_token_request.dart';
 import 'package:twin_finder/core/utils/token_secure.dart';
@@ -70,9 +70,18 @@ class AuthRepository {
       final res = await api.authentication.login(
         body: LoginRequest(email: email, password: password),
       );
+
+      // Check if login was successful and we have token data
+      if (!res.success || res.data == null) {
+        throw ApiError(
+          message: res.message ?? 'Login failed - please check your credentials',
+          statusCode: 401,
+        );
+      }
+
       await tokenStore.save(
-        access: res.data?.accessToken,
-        refresh: res.data?.refreshToken,
+        access: res.data!.accessToken,
+        refresh: res.data!.refreshToken,
       );
       return res;
     } on DioException catch (e) {
@@ -82,18 +91,36 @@ class AuthRepository {
 
   Future<SocialLoginResponse> authGoogle(GoogleLoginRequest request) async {
     final res = await api.authentication.loginWithGoogle(body: request);
+
+    // Check if login was successful and we have token data
+    if (!res.success || res.data == null) {
+      throw ApiError(
+        message: res.message ?? 'Google Sign-In failed - please try again',
+        statusCode: 401,
+      );
+    }
+
     await tokenStore.save(
-      access: res.data?.accessToken,
-      refresh: res.data?.refreshToken,
+      access: res.data!.accessToken,
+      refresh: res.data!.refreshToken,
     );
     return res;
   }
 
   Future<SocialLoginResponse> authApple(AppleLoginRequest request) async {
     final res = await api.authentication.loginWithApple(body: request);
+
+    // Check if login was successful and we have token data
+    if (!res.success || res.data == null) {
+      throw ApiError(
+        message: res.message ?? 'Apple Sign-In failed - please try again',
+        statusCode: 401,
+      );
+    }
+
     await tokenStore.save(
-      access: res.data?.accessToken,
-      refresh: res.data?.refreshToken,
+      access: res.data!.accessToken,
+      refresh: res.data!.refreshToken,
     );
     return res;
   }
@@ -111,9 +138,17 @@ class AuthRepository {
       body: EmailRegistrationConfirm(email: email, verificationCode: code),
     );
 
+    // Check if confirmation was successful and we have token data
+    if (!res.success || res.data == null) {
+      throw ApiError(
+        message: res.message ?? 'Email verification failed - please try again',
+        statusCode: 401,
+      );
+    }
+
     await tokenStore.save(
-      access: res.data?.accessToken,
-      refresh: res.data?.refreshToken,
+      access: res.data!.accessToken,
+      refresh: res.data!.refreshToken,
     );
     return res;
   }
@@ -141,9 +176,17 @@ class AuthRepository {
       ),
     );
 
+    // Check if password setup was successful and we have token data
+    if (!res.success || res.data == null) {
+      throw ApiError(
+        message: res.message ?? 'Password setup failed - please try again',
+        statusCode: 401,
+      );
+    }
+
     await tokenStore.save(
-      access: res.data?.accessToken,
-      refresh: res.data?.refreshToken,
+      access: res.data!.accessToken,
+      refresh: res.data!.refreshToken,
     );
     return res;
   }
@@ -277,7 +320,7 @@ class AuthRepository {
   }
 
   /// Upload photo for the current user
-  Future<PhotoUploadResponse> uploadPhoto(File photoFile) async {
+  Future<PhotoResponse> uploadPhoto(File photoFile) async {
     try {
       await _refreshIfExpiringSoon();
       // Check if we have a valid access token before making the request

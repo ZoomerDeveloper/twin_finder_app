@@ -31,9 +31,9 @@ class AuthResponse {
     required this.message,
     this.data,
   });
-  
+
   factory AuthResponse.fromJson(Map<String, Object?> json) => _$AuthResponseFromJson(json);
-  
+
   /// Boolean indicating if the authentication operation succeeded
   final bool success;
 

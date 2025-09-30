@@ -14,9 +14,9 @@ class MatchGenerationResponse {
     required this.totalMatches,
     required this.message,
   });
-  
+
   factory MatchGenerationResponse.fromJson(Map<String, Object?> json) => _$MatchGenerationResponseFromJson(json);
-  
+
   /// Number of matches generated
   @JsonKey(name: 'generated_count')
   final int generatedCount;

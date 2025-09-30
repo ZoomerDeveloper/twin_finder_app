@@ -20,11 +20,34 @@ Dio createDio() {
   );
 
   dio.interceptors.addAll([
+    _EnvelopeUnwrappingInterceptor(),
     _AuthInterceptor(sl),
     LogInterceptor(requestBody: true, responseBody: true),
   ]);
 
   return dio;
+}
+
+class _EnvelopeUnwrappingInterceptor extends Interceptor {
+  @override
+  void onResponse(Response response, ResponseInterceptorHandler handler) {
+    // Check if response data is a Map with envelope structure
+    if (response.data is Map<String, dynamic>) {
+      final data = response.data as Map<String, dynamic>;
+
+      // Check if it has the envelope structure (success, message, data, errors, meta)
+      if (data.containsKey('success') &&
+          data.containsKey('message') &&
+          data.containsKey('data') &&
+          data.containsKey('errors') &&
+          data.containsKey('meta')) {
+        // Unwrap the envelope by replacing response data with the inner data field
+        response.data = data['data'];
+      }
+    }
+
+    handler.next(response);
+  }
 }
 
 class _AuthInterceptor extends Interceptor {
