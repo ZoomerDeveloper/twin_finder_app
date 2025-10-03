@@ -62,6 +62,8 @@ class LocalizationStrings {
     'change_photo': 'Change Photo',
     'logout': 'Logout',
     'logout_confirmation': 'Are you sure you want to logout?',
+    'delete_account_confirmation': 'Are you sure you want to delete your account? This action is permanent and cannot be undone. All your data, photos, and matches will be deleted.',
+    'account_deleted': 'Account deleted successfully',
     'no': 'No',
     'yes': 'Yes',
 
@@ -249,6 +251,8 @@ class LocalizationStrings {
     'change_photo': 'Cambiar Foto',
     'logout': 'Cerrar Sesión',
     'logout_confirmation': '¿Estás seguro de que quieres cerrar sesión?',
+    'delete_account_confirmation': '¿Estás seguro de que deseas eliminar tu cuenta? Esta acción es permanente y no se puede deshacer. Todos tus datos, fotos y matches serán eliminados.',
+    'account_deleted': 'Cuenta eliminada exitosamente',
     'yes': 'Sí',
     'no': 'No',
 
@@ -437,6 +441,8 @@ class LocalizationStrings {
     'change_photo': '更改照片',
     'logout': '退出登录',
     'logout_confirmation': '您确定要退出登录吗？',
+    'delete_account_confirmation': '您确定要删除您的账号吗？此操作是永久性的，无法撤消。您的所有数据、照片和匹配将被删除。',
+    'account_deleted': '账号删除成功',
     'yes': '是',
     'no': '否',
 
@@ -614,6 +620,8 @@ class LocalizationStrings {
     'change_photo': 'Изменить фото',
     'logout': 'Выйти',
     'logout_confirmation': 'Вы уверены, что хотите выйти?',
+    'delete_account_confirmation': 'Вы уверены, что хотите удалить свой аккаунт? Это действие необратимо. Все ваши данные, фотографии и совпадения будут удалены.',
+    'account_deleted': 'Аккаунт успешно удален',
     'yes': 'Да',
     'no': 'Нет',
 

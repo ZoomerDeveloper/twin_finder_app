@@ -14,6 +14,7 @@ import 'package:twin_finder/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:twin_finder/features/auth/presentation/widgets/background_widget.dart';
 import 'package:twin_finder/core/utils/error_handler.dart';
 import 'package:twin_finder/core/utils/geolocation_service.dart';
+import 'package:twin_finder/core/utils/registration_step_service.dart';
 
 class Country {
   final String name; // "Montenegro"
@@ -418,6 +419,18 @@ class _LocationPageState extends State<LocationPage> {
 
   bool get _canContinue => _selectedCountry != null && _selectedCity != null;
 
+  /// Normalize city name by removing district numbers and extra text
+  /// Examples: "Dublin 7" → "Dublin", "New York (Manhattan)" → "New York"
+  String _normalizeCityName(String cityName) {
+    // Remove district numbers (e.g., "Dublin 7" → "Dublin")
+    final withoutNumbers = cityName.replaceAll(RegExp(r'\s+\d+$'), '');
+
+    // Remove parenthetical text (e.g., "Paris (Île-de-France)" → "Paris")
+    final withoutParens = withoutNumbers.replaceAll(RegExp(r'\s*\([^)]*\)'), '');
+
+    return withoutParens.trim();
+  }
+
   @override
   Widget build(BuildContext context) {
     final countryActive =
@@ -699,20 +712,19 @@ class _LocationPageState extends State<LocationPage> {
                   vertical: 16,
                 ),
                 child: Center(
-                  child: BlocBuilder<AuthCubit, AuthState>(
+                  child: BlocConsumer<AuthCubit, AuthState>(
+                    listener: (context, state) {
+                      // Handle error states in listener (runs only once per state change)
+                      if (state is AuthProfileUpdateFailed) {
+                        ErrorHandler.showError(
+                          context,
+                          '${L.error(context)}: ${state.message}',
+                          title: L.error(context),
+                        );
+                      }
+                    },
                     builder: (context, state) {
                       final isLoading = state is AuthLoading;
-
-                      // Show error message if profile update failed
-                      if (state is AuthProfileUpdateFailed && mounted) {
-                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                          ErrorHandler.showError(
-                            context,
-                            '${L.error(context)}: ${state.message}',
-                            title: L.error(context),
-                          );
-                        });
-                      }
 
                       return GestureDetector(
                         onTap: _canContinue && !isLoading
@@ -721,9 +733,11 @@ class _LocationPageState extends State<LocationPage> {
 
                                 // Update location in AuthCubit
                                 final authCubit = context.read<AuthCubit>();
+                                // Normalize city name to remove district numbers/extra text
+                                final normalizedCity = _normalizeCityName(_selectedCity!.name);
                                 await authCubit.updateProfile(
                                   country: _selectedCountry!.name,
-                                  city: _selectedCity!.name,
+                                  city: normalizedCity,
                                 );
 
                                 // Check if update was successful and navigate
@@ -735,6 +749,14 @@ class _LocationPageState extends State<LocationPage> {
                                     debugPrint(
                                       'Location updated successfully, navigating to face capture page',
                                     );
+
+                                    // Save next step before navigating
+                                    await RegistrationStepService.saveStep(
+                                      RegistrationStepService.stepPhoto,
+                                    );
+
+                                    if (!mounted) return;
+
                                     context.onlyAnimatedRoute(
                                       AppRoutes.faceCapturePage,
                                     );

@@ -345,6 +345,54 @@ class _ProfilePageState extends State<ProfilePage> {
                         ),
                       ),
 
+                      const SizedBox(height: 16),
+
+                      // Third Block: Delete Account
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        margin: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(8, 0, 16, 0),
+                          child: ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            leading: Container(
+                              height: 32,
+                              width: 32,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFF0000),
+                                shape: BoxShape.circle,
+                              ),
+                              alignment: Alignment.center,
+                              child: const Icon(
+                                Icons.delete_forever,
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                            ),
+                            title: Text(
+                              L.deleteAccount(context),
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontFamily: 'Bricolage Grotesque',
+                                fontWeight: FontWeight.w500,
+                                color: Colors.black,
+                              ),
+                            ),
+                            trailing: const Icon(
+                              Icons.arrow_forward_ios,
+                              color: Colors.grey,
+                              size: 16,
+                            ),
+                            onTap: () {
+                              _showDeleteAccountConfirmationDialog(context);
+                            },
+                          ),
+                        ),
+                      ),
+
                       const SizedBox(height: 32),
                     ],
                   ),
@@ -516,6 +564,101 @@ class _ProfilePageState extends State<ProfilePage> {
                       },
                       style: TextButton.styleFrom(
                         backgroundColor: AppColors.button,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(25),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      child: Text(
+                        L.yes(context),
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                          fontFamily: 'Bricolage Grotesque',
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+          actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        );
+      },
+    );
+  }
+
+  void _showDeleteAccountConfirmationDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          backgroundColor: Colors.white,
+          title: Text(
+            L.deleteAccount(context),
+            style: TextStyle(
+              fontSize: 32,
+              fontWeight: FontWeight.bold,
+              color: const Color(0xFFFF0000),
+              fontFamily: 'Bricolage Grotesque',
+            ),
+            textAlign: TextAlign.center,
+          ),
+          content: Text(
+            L.deleteAccountConfirmation(context),
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.black87,
+              fontFamily: 'Bricolage Grotesque',
+            ),
+            textAlign: TextAlign.center,
+          ),
+          actions: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      style: TextButton.styleFrom(
+                        backgroundColor: Colors.grey[200],
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(25),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      child: Text(
+                        L.no(context),
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
+                          fontFamily: 'Bricolage Grotesque',
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        context.read<AuthCubit>().deleteAccount();
+                        context.animatedRoute(AppRoutes.auth);
+                      },
+                      style: TextButton.styleFrom(
+                        backgroundColor: const Color(0xFFFF0000),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(25),
                         ),

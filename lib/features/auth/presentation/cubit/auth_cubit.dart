@@ -10,6 +10,7 @@ import 'package:twin_finder/api/models/photo_response.dart';
 import 'package:twin_finder/core/errors/api_error.dart';
 import 'package:twin_finder/core/utils/error_handler.dart';
 import 'package:twin_finder/features/auth/presentation/repository/auth_repository.dart';
+import 'package:twin_finder/core/utils/registration_step_service.dart';
 part 'auth_state.dart';
 
 class AuthCubit extends Cubit<AuthState> {
@@ -203,6 +204,25 @@ class AuthCubit extends Cubit<AuthState> {
     // emit(AuthUnauthenticated());
   }
 
+  Future<void> deleteAccount() async {
+    emit(AuthLoading());
+    try {
+      await repo.deleteAccount();
+      // Clear cached profile data
+      _cachedProfile = null;
+      debugPrint('Profile cache cleared after account deletion');
+      // Account deleted successfully, emit unauthenticated state
+      emit(AuthUnauthenticated());
+    } catch (e) {
+      debugPrint('Account deletion error: $e');
+      emit(AuthFailure(e.toString()));
+      // Re-emit authenticated state to stay on profile page if deletion fails
+      if (_cachedProfile != null) {
+        emit(AuthAuthenticated(_cachedProfile!));
+      }
+    }
+  }
+
   Future<void> updateProfile({
     String? name,
     DateTime? birthday,
@@ -317,23 +337,33 @@ class AuthCubit extends Cubit<AuthState> {
         debugPrint('Profile loaded from API and cached');
       }
 
-      // Check if profile is complete using server-side flag
       final user = profile.data;
-      final isComplete = user.profileCompleted;
 
-      debugPrint(
-        'Profile completeness check: profileCompleted=${user.profileCompleted}, name=${user.name.isNotEmpty}, birthday=${user.birthday != null}, gender=${user.gender != null}, country=${user.country != null}, city=${user.city != null}',
+      // Determine which step is incomplete (including photo)
+      final incompleteStep = RegistrationStepService.determineIncompleteStep(
+        name: user.name.isEmpty ? null : user.name,
+        birthday: user.birthday,
+        gender: user.gender,
+        country: user.country,
+        city: user.city,
+        profilePhotoUrl: user.profilePhotoUrl,
       );
 
-      if (isComplete) {
+      debugPrint(
+        'Profile completeness check: name=${user.name.isNotEmpty}, birthday=${user.birthday != null}, gender=${user.gender != null}, country=${user.country != null}, city=${user.city != null}, photo=${user.profilePhotoUrl != null}, incompleteStep=$incompleteStep',
+      );
+
+      if (incompleteStep == RegistrationStepService.stepComplete) {
         // Profile is complete, user can proceed to main app
         debugPrint('Profile is complete, emitting AuthAuthenticated');
+        await RegistrationStepService.clearStep(); // Clear saved step
         emit(AuthAuthenticated(profile));
       } else {
-        // Profile is incomplete, redirect to profile setup with data
+        // Profile is incomplete, save the step and redirect to profile setup
         debugPrint(
-          'Profile is incomplete, emitting AuthNeedsProfileSetupWithData',
+          'Profile is incomplete at step: $incompleteStep, emitting AuthNeedsProfileSetupWithData',
         );
+        await RegistrationStepService.saveStep(incompleteStep);
         emit(AuthNeedsProfileSetupWithData(profile));
       }
     } catch (e) {

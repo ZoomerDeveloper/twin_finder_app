@@ -11,6 +11,7 @@ import 'package:twin_finder/core/localization/export.dart';
 import 'package:twin_finder/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:twin_finder/features/auth/presentation/widgets/background_widget.dart';
 import 'package:twin_finder/core/utils/error_handler.dart';
+import 'package:twin_finder/core/utils/registration_step_service.dart';
 
 class GenderPage extends StatefulWidget {
   final UserProfileResponse? profileData;
@@ -232,6 +233,14 @@ class _GenderPageState extends State<GenderPage> {
                                     debugPrint(
                                       'Gender updated successfully, navigating to location page',
                                     );
+
+                                    // Save next step before navigating
+                                    await RegistrationStepService.saveStep(
+                                      RegistrationStepService.stepLocation,
+                                    );
+
+                                    if (!mounted) return;
+
                                     // Pass profile data to next page
                                     final nextPageProfileData =
                                         currentState is AuthAuthenticated

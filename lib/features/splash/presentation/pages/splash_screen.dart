@@ -5,6 +5,7 @@ import 'package:twin_finder/core/localization/export.dart';
 import 'package:twin_finder/core/router/app_routes.dart';
 import 'package:twin_finder/core/router/navigation.dart';
 import 'package:twin_finder/core/utils/app_images.dart';
+import 'package:twin_finder/core/utils/registration_step_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -76,17 +77,47 @@ class _SplashScreenState extends State<SplashScreen>
     return Scaffold(
       backgroundColor: const Color(0xFF1A1A1A),
       body: BlocListener<AuthCubit, AuthState>(
-        listener: (context, state) {
+        listener: (context, state) async {
           if (state is AuthAuthenticated) {
             // Profile is complete, navigate to main page
             context.animatedRoute(AppRoutes.main);
           } else if (state is AuthNeedsProfileSetup ||
               state is AuthNeedsProfileSetupWithData) {
-            // Profile is incomplete, navigate to profile setup
-            if (state is AuthNeedsProfileSetupWithData) {
-              context.animatedRoute(AppRoutes.name, arguments: [state.profile]);
+            // Profile is incomplete, check saved step or determine from profile
+            final savedStep = await RegistrationStepService.getCurrentStep();
+
+            if (!context.mounted) return;
+
+            final profile = state is AuthNeedsProfileSetupWithData
+                ? state.profile
+                : null;
+
+            // Determine which route to navigate to based on saved step
+            String route;
+            switch (savedStep) {
+              case RegistrationStepService.stepBirthday:
+                route = AppRoutes.birthday;
+                break;
+              case RegistrationStepService.stepGender:
+                route = AppRoutes.gender;
+                break;
+              case RegistrationStepService.stepLocation:
+                route = AppRoutes.location;
+                break;
+              case RegistrationStepService.stepPhoto:
+                route = AppRoutes.faceCapturePage;
+                break;
+              case RegistrationStepService.stepName:
+              default:
+                route = AppRoutes.name;
+                break;
+            }
+
+            // Navigate to the appropriate step with profile data if available
+            if (profile != null) {
+              context.animatedRoute(route, arguments: [profile]);
             } else {
-              context.animatedRoute(AppRoutes.name);
+              context.animatedRoute(route);
             }
           } else if (state is AuthUnauthenticated) {
             // No valid token, navigate to auth page

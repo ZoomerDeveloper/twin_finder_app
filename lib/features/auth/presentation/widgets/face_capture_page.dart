@@ -15,6 +15,7 @@ import 'package:twin_finder/core/router/app_routes.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:twin_finder/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:image/image.dart' as img;
+import 'package:twin_finder/core/utils/registration_step_service.dart';
 
 class FaceCapturePage extends StatefulWidget {
   const FaceCapturePage({super.key});
@@ -170,6 +171,11 @@ class _FaceCapturePageState extends State<FaceCapturePage>
         } else if (msg.toLowerCase().contains('authentication')) {
           title = 'Authentication required';
           msg = 'Please log in again to continue.';
+        } else if (msg.toLowerCase().contains('server error') ||
+            msg.toLowerCase().contains('500')) {
+          title = 'Server Error';
+          msg =
+              'The server encountered an error while processing your photo. Please try again in a moment.';
         }
 
         ErrorHandler.showError(context, msg, title: title);
@@ -313,9 +319,12 @@ class _FaceCapturePageState extends State<FaceCapturePage>
                                           _phase == _Phase.live)
                                       ? _takePicture
                                       : null,
-                                  onSeeMatches: () {
+                                  onSeeMatches: () async {
                                     HapticFeedback.lightImpact();
+                                    // Clear registration step since registration is complete
+                                    await RegistrationStepService.clearStep();
                                     // Navigate to main page with matches
+                                    if (!context.mounted) return;
                                     Navigator.of(
                                       context,
                                     ).pushNamedAndRemoveUntil(

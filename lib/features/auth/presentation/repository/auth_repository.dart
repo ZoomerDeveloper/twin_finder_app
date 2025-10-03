@@ -206,6 +206,45 @@ class AuthRepository {
     await tokenStore.clear();
   }
 
+  /// Delete user account permanently (GDPR)
+  Future<void> deleteAccount() async {
+    try {
+      await _refreshIfExpiringSoon();
+      // Check if we have a valid access token before making the request
+      final accessToken = await tokenStore.access;
+      if (accessToken == null || accessToken.isEmpty) {
+        throw Exception('No access token available - please login first');
+      }
+
+      debugPrint('Deleting account...');
+
+      await api.users.deleteMyAccountApiV1UsersMeDelete();
+
+      debugPrint('Account deleted successfully');
+
+      // Clear tokens after successful deletion
+      await tokenStore.clear();
+    } catch (e) {
+      debugPrint('Account deletion error: $e');
+
+      if (e is DioException) {
+        final statusCode = e.response?.statusCode;
+
+        if (statusCode == 401) {
+          // Clear invalid tokens
+          await tokenStore.clear();
+          throw Exception('Authentication required - please login again');
+        } else if (statusCode == 429) {
+          throw Exception('Too many requests - please try again later');
+        } else if (statusCode != null && statusCode >= 500) {
+          throw Exception('Server error - please try again later');
+        }
+      }
+
+      throw Exception('Failed to delete account: $e');
+    }
+  }
+
   /// Load user profile with error handling
   Future<UserProfileResponse> loadMe() async {
     try {
@@ -384,9 +423,13 @@ class AuthRepository {
           throw Exception('Unsupported file format - please use JPG or PNG');
         } else if (statusCode != null && statusCode >= 500) {
           // Server error - provide more specific error message
-          final errorMessage = responseData is Map<String, dynamic> 
-              ? responseData['detail'] ?? 'Server error'
-              : 'Server error: $statusCode - please try again later';
+          String errorMessage = 'The server encountered an error while processing your photo';
+          if (responseData is Map<String, dynamic>) {
+            // Check both 'detail' and 'message' fields from server response
+            errorMessage = responseData['detail']
+                ?? responseData['message']
+                ?? errorMessage;
+          }
           throw Exception('Server error: $errorMessage');
         }
       }

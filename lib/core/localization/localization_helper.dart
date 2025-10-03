@@ -163,6 +163,10 @@ class L {
   static String logout(BuildContext context) => s(context, 'logout');
   static String logoutConfirmation(BuildContext context) =>
       s(context, 'logout_confirmation');
+  static String deleteAccountConfirmation(BuildContext context) =>
+      s(context, 'delete_account_confirmation');
+  static String accountDeleted(BuildContext context) =>
+      s(context, 'account_deleted');
   static String updateProfile(BuildContext context) =>
       s(context, 'update_profile');
   static String profileUpdated(BuildContext context) =>
