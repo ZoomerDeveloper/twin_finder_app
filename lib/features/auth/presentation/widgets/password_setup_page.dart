@@ -415,6 +415,65 @@ class _PasswordSetupPageState extends State<PasswordSetupPage> {
                 ),
               ),
 
+              const SizedBox(height: 16),
+
+              // Password validation hints
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Password length requirement
+                    Row(
+                      children: [
+                        Icon(
+                          _validPassword
+                              ? Icons.check_circle
+                              : Icons.circle_outlined,
+                          size: 20,
+                          color: Colors.white.withOpacity(_validPassword ? 1.0 : 0.5),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'At least 8 characters',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.white.withOpacity(_validPassword ? 1.0 : 0.7),
+                            fontFamily: 'Bricolage Grotesque',
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    // Passwords match requirement
+                    Row(
+                      children: [
+                        Icon(
+                          (_validConfirmPassword && _confirmPasswordController.text.isNotEmpty)
+                              ? Icons.check_circle
+                              : Icons.circle_outlined,
+                          size: 20,
+                          color: Colors.white.withOpacity(
+                            (_validConfirmPassword && _confirmPasswordController.text.isNotEmpty) ? 1.0 : 0.5,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Passwords match',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.white.withOpacity(
+                              (_validConfirmPassword && _confirmPasswordController.text.isNotEmpty) ? 1.0 : 0.7,
+                            ),
+                            fontFamily: 'Bricolage Grotesque',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
               if (_error != null) ...[
                 const SizedBox(height: 8),
                 Padding(

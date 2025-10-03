@@ -65,10 +65,47 @@ class _NamePageState extends State<NamePage> {
                   AppIcons.back,
                   colorFilter: ColorFilter.mode(Colors.white, BlendMode.srcIn),
                 ),
-                onPressed: () {
+                onPressed: () async {
                   HapticFeedback.lightImpact();
-                  // Use animated route for back navigation to auth page
-                  context.onlyAnimatedRoute(AppRoutes.auth);
+
+                  // Show dialog to confirm logout/restart registration
+                  final shouldLogout = await showDialog<bool>(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('Exit Registration?'),
+                      content: const Text(
+                        'Are you sure you want to exit? You will need to log in again to continue registration.',
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(false),
+                          child: const Text('Cancel'),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(true),
+                          child: const Text('Exit'),
+                        ),
+                      ],
+                    ),
+                  );
+
+                  if (shouldLogout == true && context.mounted) {
+                    // Clear registration step
+                    await RegistrationStepService.clearStep();
+
+                    if (!context.mounted) return;
+
+                    // Logout the user
+                    await context.read<AuthCubit>().logout();
+
+                    if (!context.mounted) return;
+
+                    // Navigate to auth page
+                    Navigator.of(context).pushNamedAndRemoveUntil(
+                      AppRoutes.auth,
+                      (route) => false,
+                    );
+                  }
                 },
               ),
             ),

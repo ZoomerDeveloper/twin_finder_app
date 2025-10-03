@@ -20,11 +20,32 @@ import 'package:twin_finder/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:twin_finder/features/auth/presentation/widgets/background_widget.dart';
 import 'package:twin_finder/core/utils/error_handler.dart';
 
-class AuthPage extends StatelessWidget {
+class AuthPage extends StatefulWidget {
   const AuthPage({super.key});
 
+  @override
+  State<AuthPage> createState() => _AuthPageState();
+}
+
+class _AuthPageState extends State<AuthPage> {
   // Защита от двойного старта Apple Sign In
   static bool _isSigningIn = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Reset auth state to ensure clean slate when entering auth page
+    // This prevents navigation hang issues from previous auth attempts
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        final currentState = context.read<AuthCubit>().state;
+        // Reset if in loading or failure state
+        if (currentState is AuthLoading || currentState is AuthFailure) {
+          context.read<AuthCubit>().resetToUnauthenticated();
+        }
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

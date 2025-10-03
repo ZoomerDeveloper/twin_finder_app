@@ -272,9 +272,28 @@ class _FaceCapturePageState extends State<FaceCapturePage>
                         AppIcons.back,
                         color: Colors.white,
                       ),
-                      onPressed: () {
+                      onPressed: () async {
                         HapticFeedback.lightImpact();
-                        Navigator.of(context).maybePop();
+
+                        // Try to pop first (if there's a previous route in the stack)
+                        final didPop = await Navigator.of(context).maybePop();
+
+                        // If couldn't pop (no previous route), navigate to location page
+                        // or show logout dialog
+                        if (!didPop && context.mounted) {
+                          // Save the previous step (location) before navigating back
+                          await RegistrationStepService.saveStep(
+                            RegistrationStepService.stepLocation,
+                          );
+
+                          if (!context.mounted) return;
+
+                          // Navigate to location page
+                          Navigator.of(context).pushNamedAndRemoveUntil(
+                            AppRoutes.location,
+                            (route) => false,
+                          );
+                        }
                       },
                     ),
                   ),

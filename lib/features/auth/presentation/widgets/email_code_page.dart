@@ -97,18 +97,32 @@ class _EmailCodePageState extends State<EmailCodePage> {
 
       // Success will be handled by BlocListener
       HapticFeedback.mediumImpact();
+
+      // Wait a bit to allow BlocListener to process the state
+      await Future.delayed(const Duration(milliseconds: 100));
     } catch (e) {
       HapticFeedback.heavyImpact();
-      setState(() {
-        _error = e.toString();
-        _loading = false;
-      });
-      // Show error toast
-      ErrorHandler.showError(
-        context,
-        _error ?? 'Failed to verify code',
-        title: 'Verification Failed',
-      );
+      if (mounted) {
+        setState(() {
+          _error = e.toString();
+          _loading = false;
+        });
+        // Show error toast
+        ErrorHandler.showError(
+          context,
+          _error ?? 'Failed to verify code',
+          title: 'Verification Failed',
+        );
+      }
+    } finally {
+      // Safety mechanism: reset loading state after timeout to prevent permanent blocking
+      // This ensures the button never stays blocked forever, even if BlocListener fails
+      await Future.delayed(const Duration(seconds: 3));
+      if (mounted && _loading) {
+        setState(() {
+          _loading = false;
+        });
+      }
     }
   }
 

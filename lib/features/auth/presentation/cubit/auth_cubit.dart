@@ -409,6 +409,12 @@ class AuthCubit extends Cubit<AuthState> {
     _hasAuthenticationFailed = false;
   }
 
+  /// Reset auth state to unauthenticated (used when returning to auth page)
+  void resetToUnauthenticated() {
+    _hasAuthenticationFailed = false;
+    emit(AuthUnauthenticated());
+  }
+
   Future<void> uploadPhoto(File photoFile) async {
     // Allow upload regardless of transient auth states; repo will enforce token
     emit(AuthLoading());

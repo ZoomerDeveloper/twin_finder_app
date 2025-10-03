@@ -91,12 +91,25 @@ class _LocationPageState extends State<LocationPage> {
     // Pre-fill country and city if available from profile data
     if (widget.profileData != null) {
       if (widget.profileData!.data.country != null) {
-        _countryCtrl.text = widget.profileData!.data.country!;
-        // Получаем правильный country code через API
-        _getCountryCodeFromName(widget.profileData!.data.country!);
+        final countryName = widget.profileData!.data.country!;
+        _countryCtrl.text = countryName;
+        // Create selected country object immediately with temporary code
+        // The real code will be updated when _getCountryCodeFromName returns
+        _selectedCountry = Country(name: countryName, code: 'XX');
+        // Get the proper country code via API
+        _getCountryCodeFromName(countryName);
       }
       if (widget.profileData!.data.city != null) {
-        _cityCtrl.text = widget.profileData!.data.city!;
+        final cityName = widget.profileData!.data.city!;
+        _cityCtrl.text = cityName;
+        // Create selected city object immediately
+        _selectedCity = City(
+          name: cityName,
+          country: _selectedCountry?.name ?? '',
+          countryCode: _selectedCountry?.code ?? 'XX',
+          lat: 0.0,
+          lon: 0.0,
+        );
       }
     }
 
@@ -225,9 +238,22 @@ class _LocationPageState extends State<LocationPage> {
             countryCode != 'XX') {
           setState(() {
             _selectedCountry = Country(name: countryName, code: countryCode);
+            // Update city's country code if city is already selected
+            if (_selectedCity != null) {
+              _selectedCity = City(
+                name: _selectedCity!.name,
+                country: countryName,
+                countryCode: countryCode,
+                lat: _selectedCity!.lat,
+                lon: _selectedCity!.lon,
+                admin1: _selectedCity!.admin1,
+              );
+            }
           });
-          // После получения country code, запускаем поиск городов
-          _debounced(() => _searchCities(''));
+          // После получения country code, запускаем поиск городов только если город не выбран
+          if (_selectedCity == null) {
+            _debounced(() => _searchCities(''));
+          }
         } else {
           debugPrint('Invalid country code received: $countryCode');
         }

@@ -216,3 +216,4 @@
 | 156 | 2025-09-30 10:21 | 155 | Подготовка зависимостей WDA | bootstrap via scripts | ℹ️ Repo без bootstrap.sh; используем прямую сборку xcodebuild |
 | 157 | 2025-09-30 10:28 | 156 | Перенос WDA | mv ~/Developer/WebDriverAgent -> ~/Development/WebDriverAgent | ✅ Выполнено: путь обновлён |
 | 158 | 2025-09-30 13:50 | 157 | Настройка Claude iOS | Добавлен WDA URL и UDID в .claude/settings.local.json | ✅ Выполнено: direct WDA интеграция |
+| 159 | 2025-01-29 21:00 | 158 | Git commit и push | Коммит всех изменений и пуш в dev ветку | ✅ Успешно: закоммичены 12 файлов (406 добавлений, 29 удалений), пуш в origin/dev выполнен (b2e5a62) |
